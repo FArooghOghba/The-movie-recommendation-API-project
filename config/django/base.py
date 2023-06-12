@@ -4,7 +4,7 @@ from config.env import env, BASE_DIR
 env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = '=ug_ucl@yi6^mrcjyz%(u0%&g2adt#bz3@yos%#@*t#t!ypx=a'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
