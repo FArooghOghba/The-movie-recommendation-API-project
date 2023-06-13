@@ -6,7 +6,6 @@ from unittest.mock import patch, MagicMock
 
 from django.core.management import call_command
 from django.db.utils import OperationalError
-from django.test import SimpleTestCase
 
 from psycopg2 import OperationalError as Psycopg2Error
 
@@ -14,21 +13,23 @@ from psycopg2 import OperationalError as Psycopg2Error
 @patch(
     'movie_recommendation_api.common.management.commands.wait_for_db.Command.check'
 )
-class CommandsTest(SimpleTestCase):
+class TestWaitForDBCommand:
     """Test commands."""
 
-    def test_wait_for_db_is_ready(self, patched_check: MagicMock) -> None:
+
+    def test_wait_for_db_command_is_ready(
+            self, patched_check: MagicMock, time_tracker
+    ) -> None:
         """Test waiting for database if database is ready."""
 
         patched_check.return_value = True
-
         call_command('wait_for_db')
 
         patched_check.assert_called_once_with(databases=['default'])
 
     @patch('time.sleep')
-    def test_wait_for_db_has_delay(
-            self, patched_sleep, patched_check: MagicMock
+    def test_wait_for_db_command_has_delay(
+            self, patched_sleep, patched_check: MagicMock, time_tracker
     ) -> None:
         """
         Test waiting for database is ready after 6 called with OperationalError.
