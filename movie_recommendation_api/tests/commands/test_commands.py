@@ -16,7 +16,6 @@ from psycopg2 import OperationalError as Psycopg2Error
 class TestWaitForDBCommand:
     """Test commands."""
 
-
     def test_wait_for_db_command_is_ready(
             self, patched_check: MagicMock, time_tracker
     ) -> None:
