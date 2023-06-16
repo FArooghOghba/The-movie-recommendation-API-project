@@ -39,7 +39,9 @@ def test_create_user_with_email_successful(time_tracker) -> None:
         ('test4@example.COM', 'test_username4', 'test4@example.com'),
     ],
 )
-def test_new_user_email_normalized(email: str, username: str, email_expected_format: str, time_tracker) -> None:
+def test_new_user_email_normalized(
+    email: str, username: str, email_expected_format: str, time_tracker
+) -> None:
     """Test email address is normalized for new users."""
 
     test_user = get_user_model().objects.create_user(
