@@ -79,22 +79,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': env.db('DATABASE_URL', default='psql://postgres:postgres@db:5432/movie_recommendation_api'),
+# }
+# DATABASES['default']['ATOMIC_REQUESTS'] = True
+#
+# if os.environ.get('GITHUB_WORKFLOW'):
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='psql://postgres:postgres@127.0.0.1:5432/movie_recommendation_api'),
-}
-DATABASES['default']['ATOMIC_REQUESTS'] = True
-
-if os.environ.get('GITHUB_WORKFLOW'):
-    DATABASES = {
-        'default': {
-            'ENGINE': env('DB_ENGINE'),
-            'NAME': env('DB_NAME'),
-            'USER': env('DB_USER'),
-            'PASSWORD': env('DB_PASSWORD'),
-            'HOST': env('DB_HOST'),
-            'PORT': env('DB_PORT'),
-        }
+    'default': {
+        'ENGINE': env('DB_ENGINE'),
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
+}
 
 
 # Password validation
