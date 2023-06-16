@@ -13,7 +13,4 @@ COPY ./requirements /app/
 COPY ./ /app/
 
 # Installing all python dependencies
-RUN apt-get update && \
-    apt-get install --fix-missing -y gcc libpq-dev && \
-    pip install -r requirements/local.txt
-
+RUN pip install -r requirements/local.txt

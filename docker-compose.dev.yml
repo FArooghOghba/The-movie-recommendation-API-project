@@ -5,8 +5,6 @@ services:
   db:
     image: postgres:14.1
     container_name: movie_postgres
-    ports:
-      - "5432:5432"
     environment:
       - POSTGRES_DB=movie_recommendation_api
       - POSTGRES_USER=postgres
@@ -26,7 +24,6 @@ services:
       - static-data:/app/vol/web
     command: >
       sh -c "python manage.py wait_for_db &&
-             python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     env_file:
       - .env
@@ -63,4 +60,5 @@ services:
 
 volumes:
     postgres-data:
+    static-data:
     redis-data:
