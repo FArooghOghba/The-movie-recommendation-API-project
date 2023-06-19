@@ -9,6 +9,8 @@ from django.urls import reverse
 
 from rest_framework import status
 
+import json
+
 
 pytestmark = pytest.mark.django_db
 
@@ -37,6 +39,10 @@ def test_create_user_success(api_client, first_test_user) -> None:
     test_user = get_user_model().objects.get(email=test_user_payload['email'])
     assert test_user.check_password(test_user_payload['password']) is True
     assert 'password' not in response.data
+
+    response_content = json.loads(response.content)
+    assert 'access_token' in response_content
+    assert 'refresh_token' in response_content
 
 
 def test_create_user_with_existing_email_return_error(api_client, create_test_user, first_test_user) -> None:
