@@ -138,10 +138,13 @@ class BaseUser(BaseModel, AbstractBaseUser, PermissionsMixin):
 
 # class Profile(models.Model):
 #     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
-#     posts_count = models.PositiveIntegerField(default=0)
-#     subscriber_count = models.PositiveIntegerField(default=0)
-#     subscription_count = models.PositiveIntegerField(default=0)
+#     first_name = models.CharField(max_length=255, null=True, blank=True)
+#     last_name = models.CharField(max_length=255, null=True, blank=True)
 #     bio = models.CharField(max_length=1000, null=True, blank=True)
+#     favorite_genre = !!!!
+#     watchlist = !!!!!!
+#     ratings = !!!!!!
+#     reviews = !!!!!!
 #
 #     def __str__(self):
 #         return f"{self.user} >> {self.bio}"

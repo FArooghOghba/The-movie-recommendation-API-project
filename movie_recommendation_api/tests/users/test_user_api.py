@@ -19,7 +19,7 @@ CREATE_USER_URL = reverse('user:create')
 
 # ___ Test the public features of the user RegisterAPI for creating user. ___ #
 
-def test_create_user_success(api_client, first_test_user) -> None:
+def test_register_for_create_user_success(api_client, first_test_user) -> None:
     """
     Test the successful creation of a user via the RegisterAPI.
     :param api_client: (Client): The Django test client
@@ -45,7 +45,9 @@ def test_create_user_success(api_client, first_test_user) -> None:
     assert 'refresh_token' in response_content
 
 
-def test_create_user_with_existing_email_return_error(api_client, create_test_user, first_test_user) -> None:
+def test_register_for_create_user_with_existing_email_return_error(
+    api_client, create_test_user, first_test_user
+) -> None:
     """
     Test error returned if user with email exists via the RegisterAPI.
     :param api_client: (Client): The Django test client
@@ -67,7 +69,9 @@ def test_create_user_with_existing_email_return_error(api_client, create_test_us
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_create_user_with_existing_username_return_error(api_client, create_test_user, first_test_user) -> None:
+def test_register_for_create_user_with_existing_username_return_error(
+    api_client, create_test_user, first_test_user
+) -> None:
     """
     Test error returned if user with username exists via the RegisterAPI.
     :param api_client: (Client): The Django test client
@@ -90,7 +94,7 @@ def test_create_user_with_existing_username_return_error(api_client, create_test
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_create_user_with_short_pass_return_error(api_client, first_test_user) -> None:
+def test_register_for_create_user_with_short_pass_return_error(api_client, first_test_user) -> None:
     """
     Test an error is returned if password is less than 5 chars via the RegisterAPI.
     :param api_client: (Client): The Django test client
