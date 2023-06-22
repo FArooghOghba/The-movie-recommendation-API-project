@@ -17,7 +17,9 @@ class RegisterAPIView(APIView):
     input_serializer = InputRegisterSerializer
     output_serializer = OutPutRegisterModelSerializer
 
-    @extend_schema(request=InputRegisterSerializer, responses=OutPutRegisterModelSerializer)
+    @extend_schema(
+        request=InputRegisterSerializer, responses=OutPutRegisterModelSerializer
+    )
     def post(self, request):
         serializer = self.input_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -44,9 +46,13 @@ class RegisterAPIView(APIView):
 #     class OutPutSerializer(serializers.ModelSerializer):
 #         class Meta:
 #             model = Profile
-#             fields = ("bio", "posts_count", "subscriber_count", "subscription_count")
+#             fields = (
+#               "bio", "posts_count", "subscriber_count", "subscription_count"
+#             )
 #
 #     @extend_schema(responses=OutPutSerializer)
 #     def get(self, request):
 #         query = get_profile(user=request.user)
-#         return Response(self.OutPutSerializer(query, context={"request": request}).data)
+#         return Response(self.OutPutSerializer(
+#           query, context={"request": request}).data
+#         )
