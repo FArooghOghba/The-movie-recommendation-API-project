@@ -4,7 +4,9 @@ from rest_framework.pagination import LimitOffsetPagination as _LimitOffsetPagin
 from rest_framework.response import Response
 
 
-def get_paginated_response(*, pagination_class, serializer_class, queryset, request, view):
+def get_paginated_response(
+    *, pagination_class, serializer_class, queryset, request, view
+):
     paginator = pagination_class()
 
     page = paginator.paginate_queryset(queryset, request, view=view)
@@ -18,16 +20,18 @@ def get_paginated_response(*, pagination_class, serializer_class, queryset, requ
     return Response(data=serializer.data)
 
 
-def get_paginated_response_context(*, pagination_class, serializer_class, queryset, request, view):
+def get_paginated_response_context(
+    *, pagination_class, serializer_class, queryset, request, view
+):
     paginator = pagination_class()
 
     page = paginator.paginate_queryset(queryset, request, view=view)
 
     if page is not None:
-        serializer = serializer_class(page, many=True, context={'request':request})
+        serializer = serializer_class(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
 
-    serializer = serializer_class(queryset, many=True, context={'request':request})
+    serializer = serializer_class(queryset, many=True, context={'request': request})
 
     return Response(data=serializer.data)
 
