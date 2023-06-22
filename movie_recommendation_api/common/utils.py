@@ -54,6 +54,8 @@ def assert_settings(required_settings, error_message_prefix=""):
 
         stringified_not_present = ", ".join(not_present)
 
-        raise ImproperlyConfigured(f"{error_message_prefix} Could not find: {stringified_not_present}")
+        raise ImproperlyConfigured(
+            f"{error_message_prefix} Could not find: {stringified_not_present}"
+        )
 
     return values

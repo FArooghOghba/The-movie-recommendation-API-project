@@ -19,7 +19,9 @@ CREATE_USER_URL = reverse('api:users:register')
 
 # ___ Test the public features of the user RegisterAPI for creating user. ___ #
 
-def test_register_for_create_user_successful(api_client, first_test_user_payload) -> None:
+def test_register_for_create_user_successful(
+    api_client, first_test_user_payload
+) -> None:
     """
     Test the successful creation of a user via the RegisterAPI.
     :param api_client: (Client): The Django test client
@@ -101,7 +103,9 @@ def test_register_for_create_user_with_existing_username_return_error(
         ('test_pas5', 'Ensure this value has at least 10 characters (it has 9).'),
     ],
 )
-def test_register_for_validation_password_error(password, error, api_client, first_test_user_payload) -> None:
+def test_register_for_validation_password_error(
+    password, error, api_client, first_test_user_payload
+) -> None:
     """
     Test an error is returned if password is less than 5 chars via the RegisterAPI.
     :param api_client: (Client): The Django test client

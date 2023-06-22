@@ -11,9 +11,11 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
     """
     Factory class for creating instances of the BaseUser model.
 
-    This factory provides a convenient way to generate test data for the BaseUser model
-    in Django. It automatically generates unique email addresses, usernames, and sets a
-    default password for each created instance.
+    This factory provides a convenient way to generate
+    test data for the BaseUser model in Django.
+    It automatically generates unique email addresses,
+    usernames, and sets a default password for each
+    created instance.
     """
     class Meta:
         model = BaseUser
