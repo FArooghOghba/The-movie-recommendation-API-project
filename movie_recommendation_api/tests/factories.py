@@ -23,13 +23,13 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
     )
 
     username = factory.Sequence(
-        lambda instance_num: f'test user {instance_num}'
+        lambda instance_num: f'test_user_{instance_num}'
     )
 
-    password = factory.PostGenerationMethodCall('set_password', 'test_pass')
+    password = factory.PostGenerationMethodCall('set_password', 'test_pass0')
 
     @classmethod
-    def create_payload(cls):
+    def create_payload(cls) -> dict:
         """
         A class method that generates a payload dictionary for creating
         a user via the API.
@@ -37,9 +37,10 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
         for creating users via the API.
         """
 
-        test_user = cls.create()
+        test_user = cls.build()
         return {
             'email': test_user.email,
             'username': test_user.username,
-            'password': 'test_pass'
+            'password': 'test_pass0',
+            'confirm_password': 'test_pass0',
         }

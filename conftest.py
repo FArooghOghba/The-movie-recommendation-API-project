@@ -8,8 +8,10 @@ from django.contrib.auth import get_user_model
 
 from rest_framework.test import APIClient
 
+from movie_recommendation_api.users.models import BaseUser
 from movie_recommendation_api.tests.factories import BaseUserFactory
 
+from typing import Callable
 from datetime import datetime
 
 
@@ -40,19 +42,29 @@ def time_tracker() -> str:
     print(f'\n runtime: {diff.total_seconds()}')
 
 
-def create_test_user(**params):
+@pytest.fixture
+def create_test_user(**params) -> Callable:
     """Create and return a new user."""
-    return get_user_model().objects.create_user(**params)
+
+    def _create_test_user(**params) -> BaseUser:
+        return get_user_model().objects.create_user(
+            email=params['email'],
+            username=params['username'],
+            password=params['password']
+        )
+
+    return _create_test_user
 
 
 @pytest.fixture
-def first_test_user() -> BaseUserFactory:
+def first_test_user_payload() -> dict:
     """
     Fixture for creating a test user instance.
 
     This fixture uses the `BaseUserFactory` factory to create a test user instance.
     The created user can be used in tests to simulate a user with predefined attributes
     for testing various scenarios.
-    :return: a test user instance
+    :return: a dict test user payload
     """
-    return BaseUserFactory()
+
+    return BaseUserFactory.create_payload()
