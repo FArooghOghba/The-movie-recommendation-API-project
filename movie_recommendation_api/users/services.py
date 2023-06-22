@@ -1,4 +1,4 @@
-from django.db import transaction 
+from django.db import transaction
 from .models import BaseUser
 
 
@@ -13,7 +13,9 @@ def create_user(*, username: str, email: str, password: str) -> BaseUser:
 
 
 @transaction.atomic
-def register(*, username: str, email: str, bio: str | None, password: str) -> BaseUser:
+def register(
+    *, username: str, email: str, bio: str | None, password: str
+) -> BaseUser:
 
     user = create_user(
         email=email, username=username, password=password
