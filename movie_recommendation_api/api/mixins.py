@@ -1,15 +1,15 @@
 from typing import Sequence, Type, TYPE_CHECKING
 
-from importlib import import_module
+from importlib import import_module # noqa
 
-from django.conf import settings
+from django.conf import settings # noqa
 
-from django.contrib import auth
+from django.contrib import auth # noqa
 
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.authentication import BaseAuthentication
 
-from rest_framework_simplejwt.authentication import JWTAuthentication 
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 def get_auth_header(headers):
