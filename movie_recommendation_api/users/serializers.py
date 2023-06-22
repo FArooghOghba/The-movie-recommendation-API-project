@@ -14,7 +14,8 @@ class InputRegisterSerializer(serializers.Serializer):
     """
     Serializer for user registration input.
 
-    This serializer handles the validation and serialization of user registration data,
+    This serializer handles the validation and
+    serialization of user registration data,
     including email, bio, password, and confirm_password fields.
     """
 
@@ -45,9 +46,10 @@ class InputRegisterSerializer(serializers.Serializer):
         """
         Validate the uniqueness of the email.
 
-        This method is called during the validation phase to check if the provided email
-        is unique in the database. If an existing user with the same email is found,
-        a validation error is raised.
+        This method is called during the validation
+        phase to check if the provided email is unique
+        in the database. If an existing user with the same
+        email is found, a validation error is raised.
 
         :param email: (str): The email to validate.
         :return: str: The validated email.
@@ -61,9 +63,11 @@ class InputRegisterSerializer(serializers.Serializer):
         """
         Validate the uniqueness of the username.
 
-        This method is called during the validation phase to check if the provided username
-        is unique in the database. If an existing user with the same username is found,
-        a validation error is raised.
+        This method is called during the validation
+        phase to check if the provided username is
+        unique in the database. If an existing user
+        with the same username is found, a validation
+        error is raised.
 
         :param username: (str): The username to validate.
         :return: str: The validated username.
@@ -78,13 +82,16 @@ class InputRegisterSerializer(serializers.Serializer):
         """
         Validate the password and confirm_password fields.
 
-        This method is called during the validation phase to perform additional validation
-        on the password and confirm_password fields. It checks if both fields are filled,
-        and if they match each other. If any validation error occurs, an exception is raised.
+        This method is called during the validation phase
+        to perform additional validation on the password
+        and confirm_password fields. It checks if both fields
+        are filled, and if they match each other. If any
+        validation error occurs, an exception is raised.
 
         :param data: (dict): The input data to validate.
         :return: dict: The validated data.
-        :Raises: serializers.ValidationError: If password and confirm_password validations fail.
+        :Raises: serializers.ValidationError: If password and confirm_password
+         validations fail.
         """
 
         username = data.get("username")
@@ -92,13 +99,19 @@ class InputRegisterSerializer(serializers.Serializer):
         confirm_password = data.get("confirm_password")
 
         if not username:
-            raise serializers.ValidationError(_("Please provide a username."))
+            raise serializers.ValidationError(
+                _("Please provide a username.")
+            )
 
         if not password or not confirm_password:
-            raise serializers.ValidationError(_("Please fill password and confirm password."))
+            raise serializers.ValidationError(
+                _("Please fill password and confirm password.")
+            )
 
         if not password == confirm_password:
-            raise serializers.ValidationError(_("confirm password is not equal to password."))
+            raise serializers.ValidationError(
+                _("confirm password is not equal to password.")
+            )
 
         return data
 
