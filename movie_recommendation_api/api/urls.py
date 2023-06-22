@@ -1,5 +1,9 @@
 from django.urls import path, include
 
+
+app_name = 'api'
+
+
 urlpatterns = [
-    # path('blog/', include(('movie_recommendation_api.blog.urls', 'blog')))
+    path('users/', include(('movie_recommendation_api.users.urls', 'users')))
 ]
