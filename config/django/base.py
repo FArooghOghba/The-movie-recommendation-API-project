@@ -80,7 +80,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 # DATABASES = {
-#     'default': env.db('DATABASE_URL', default='psql://postgres:postgres@db:5432/movie_recommendation_api'),
+#     'default':
+#           env.db('DATABASE_URL', default='psql://postgres:postgres@db:5432/movie_recommendation_api'),
 # }
 # DATABASES['default']['ATOMIC_REQUESTS'] = True
 #
@@ -102,16 +103,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 AUTH_USER_MODEL = 'users.BaseUser'
@@ -139,8 +144,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'EXCEPTION_HANDLER': 'movie_recommendation_api.api.exception_handlers.drf_default_with_modifications_exception_handler',
-    # 'EXCEPTION_HANDLER': 'movie_recommendation_api.api.exception_handlers.hacksoft_proposed_exception_handler',
+    'EXCEPTION_HANDLER':
+        'movie_recommendation_api.api.exception_handlers.drf_default_with_modifications_exception_handler',
+    # 'EXCEPTION_HANDLER':
+    #   'movie_recommendation_api.api.exception_handlers.hacksoft_proposed_exception_handler',
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),

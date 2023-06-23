@@ -16,7 +16,8 @@ if SENTRY_DSN:
     # We are implementing this following the official documentation:
     # https://docs.sentry.io/platforms/python/performance/
     # This specific implementation ignores the execute times of all Celery tasks.
-    # But if you want to also traces them, just change the return value for the Celery tasks.
+    # But if you want to also traces them, just change the return
+    # value for the Celery tasks.
     def traces_sampler(sampling_context):
         """
         We want to track only web transactions, and ignore all Celery transactions.
