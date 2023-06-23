@@ -61,9 +61,10 @@ def first_test_user_payload() -> dict:
     """
     Fixture for creating a test user instance.
 
-    This fixture uses the `BaseUserFactory` factory to create a test user instance.
-    The created user can be used in tests to simulate a user with predefined attributes
-    for testing various scenarios.
+    This fixture uses the `BaseUserFactory` factory
+    to create a test user instance. The created user
+    can be used in tests to simulate a user with predefined
+    attributes for testing various scenarios.
     :return: a dict test user payload
     """
 
