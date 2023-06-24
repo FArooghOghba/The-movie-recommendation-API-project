@@ -17,6 +17,7 @@ LOCAL_APPS = [
     'movie_recommendation_api.core.apps.CoreConfig',
     'movie_recommendation_api.common.apps.CommonConfig',
     'movie_recommendation_api.users.apps.UsersConfig',
+    'movie_recommendation_api.movie.apps.MovieConfig',
     'movie_recommendation_api.authentication.apps.AuthenticationConfig',
 ]
 
