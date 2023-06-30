@@ -4,6 +4,7 @@ import uuid
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from movie_recommendation_api.common.models import BaseModel
 
@@ -93,7 +94,10 @@ class Movie(BaseModel):
         through='role'
     )
     synopsis = models.TextField()
-    rating = models.DecimalField(max_digits=2, decimal_places=1)
+    rating = models.DecimalField(
+        max_digits=3, decimal_places=1,
+        validators=[MinValueValidator(0.0), MaxValueValidator(10.0)]
+    )
     poster = models.ImageField(upload_to=movie_poster_file_path)
     trailer = models.URLField()
     runtime = models.DurationField()
