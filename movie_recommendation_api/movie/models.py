@@ -33,6 +33,15 @@ def cast_crew_image_file_path(instance, filename):
 class Genre(BaseModel):
     """
     Represents a movie genre.
+
+    Attributes:
+        title (str): The title of the genre.
+        slug (str): The slug field for the genre's URL representation.
+
+    Methods:
+        save(self, *args, **kwargs): Overrides the save method to generate
+        the slug based on the title.
+        __str__(self): Returns a string representation of the genre.
     """
 
     title = models.CharField(max_length=255, unique=True)
@@ -53,6 +62,18 @@ class Genre(BaseModel):
 class CastCrew(BaseModel):
     """
    Represents a cast or crew member of a movie.
+
+   Attributes:
+        name (str): The name of the cast or crew member.
+        image (ImageField): The image field for the cast or crew member's image.
+        career (str): The career of the cast or crew member.
+        cast (bool): Indicates if the member is part of the cast.
+        crew (bool): Indicates if the member is part of the crew.
+
+   Methods:
+        save(self, *args, **kwargs): Overrides the save method to generate
+        the slug based on the title.
+        __str__(self): Returns a string representation of the genre.
    """
 
     CAREER_CHOICES = [
@@ -83,6 +104,23 @@ class CastCrew(BaseModel):
 class Movie(BaseModel):
     """
     Represents a movie.
+
+    Attributes:
+        title (str): The title of the movie.
+        slug (str): The slug field for the movie's URL representation.
+        genre (ManyToManyField): The genres associated with the movie.
+        cast_crew (ManyToManyField): The cast and crew members associated with the movie.
+        synopsis (str): The synopsis of the movie.
+        rating (DecimalField): The rating of the movie.
+        poster (ImageField): The image field for the movie's poster.
+        trailer (URLField): The URL of the movie's trailer.
+        runtime (DurationField): The runtime of the movie.
+        release_date (DateField): The release date of the movie.
+
+    Methods:
+        get_absolute_url(self): Returns the absolute URL of the movie.
+        save(self, *args, **kwargs): Overrides the save method to generate the slug based on the title.
+        __str__(self): Returns a string representation of the movie.
     """
 
     title = models.CharField(max_length=255, unique=True)
@@ -121,6 +159,11 @@ class Movie(BaseModel):
 class Role(BaseModel):
     """
     Represents the role of a cast/crew member in a movie.
+
+    Attributes:
+        name (str): The name of the role.
+        cast_crew (ForeignKey): The cast or crew member associated with the role.
+        movie (ForeignKey): The movie associated with the role.
     """
 
     name = models.CharField(max_length=64)
