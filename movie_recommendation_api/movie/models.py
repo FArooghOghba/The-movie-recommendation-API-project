@@ -13,11 +13,11 @@ def movie_poster_file_path(instance, filename):
     extension = os.path.splitext(filename)[1]
     filename = f'{uuid.uuid4()}{extension}'
 
-    year = instance.release_date.year
-    month = instance.release_date.month
+    year = str(instance.release_date.year)
+    month = str(instance.release_date.month)
 
     return os.path.join(
-        'uploads', 'movie_poster', year, month, filename
+        'uploads', 'movie-poster', year, month, filename
     )
 
 
