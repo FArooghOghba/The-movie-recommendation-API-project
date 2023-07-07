@@ -2,6 +2,8 @@ import os
 import uuid
 
 from django.db import models
+from django.db.models.aggregates import Avg
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -109,9 +111,10 @@ class Movie(BaseModel):
         title (str): The title of the movie.
         slug (str): The slug field for the movie's URL representation.
         genre (ManyToManyField): The genres associated with the movie.
-        cast_crew (ManyToManyField): The cast and crew members associated with the movie.
+        cast_crew (ManyToManyField): The cast and crew members associated
+        with the movie.
         synopsis (str): The synopsis of the movie.
-        rating (DecimalField): The rating of the movie.
+        ratings (ManyToManyField): The ratings given to the movie by users.
         poster (ImageField): The image field for the movie's poster.
         trailer (URLField): The URL of the movie's trailer.
         runtime (DurationField): The runtime of the movie.
@@ -119,8 +122,10 @@ class Movie(BaseModel):
 
     Methods:
         get_absolute_url(self): Returns the absolute URL of the movie.
-        save(self, *args, **kwargs): Overrides the save method to generate the slug based on the title.
+        save(self, *args, **kwargs): Overrides the save method to generate
+        the slug based on the title.
         __str__(self): Returns a string representation of the movie.
+        average_rating(self): Calculates and returns the average rating of the movie.
     """
 
     title = models.CharField(max_length=255, unique=True)
@@ -132,9 +137,8 @@ class Movie(BaseModel):
         through='role'
     )
     synopsis = models.TextField()
-    rating = models.DecimalField(
-        max_digits=3, decimal_places=1,
-        validators=[MinValueValidator(0.0), MaxValueValidator(10.0)]
+    ratings = models.ManyToManyField(
+        get_user_model(), through='Rating', related_name='rated_movies'
     )
     poster = models.ImageField(upload_to=movie_poster_file_path)
     trailer = models.URLField()
@@ -144,16 +148,56 @@ class Movie(BaseModel):
     class Meta:
         ordering = ['-release_date']
 
-    def get_absolute_url(self):
+    @property
+    def average_rating(self) -> float:
+        """
+        Calculates and returns the average rating of the movie.
+        :return: float: The average rating of the movie.
+        """
+        rating_average = self.movie_ratings.aggregate(
+            rating_avg=Avg('rating')
+        ).get('rating_avg', 0.0)
+
+        return rating_average
+
+    def get_absolute_url(self) -> str:
+        """
+        Returns the absolute URL of the movie.
+        :return: str: The absolute URL of the movie.
+        """
         return reverse('movie:single', kwargs={'movie_slug': self.slug})
 
     def save(self, *args, **kwargs):
+        """
+        Overrides the save method to generate the slug based on the title.
+        :param args: Variable length argument list.
+        :param kwargs: Arbitrary keyword arguments.
+        """
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
+
+
+class Rating(BaseModel):
+    """
+    Represents a rating given by a user to a movie.
+
+    Attributes:
+        user (ForeignKey): The user who gave the rating.
+        movie (ForeignKey): The movie that was rated.
+        rating (DecimalField): The rating value given by the user.
+    """
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    movie = models.ForeignKey(
+        Movie, on_delete=models.CASCADE, related_name='movie_ratings'
+    )
+    rating = models.DecimalField(
+        max_digits=3, decimal_places=1,
+        validators=[MinValueValidator(0.0), MaxValueValidator(10.0)]
+    )
 
 
 class Role(BaseModel):
@@ -178,3 +222,20 @@ class Role(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+# class Movie(models.Model):
+#     # Fields of the movie model
+#     title = models.CharField(max_length=255)
+#     ratings = models.ManyToManyField(User, through='Rating')
+#
+#     @property
+#     def average_rating(self):
+#         return self.ratings.aggregate(Avg('rating')).get('rating__avg', 0.0)
+#
+#
+# class Review(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+#     text = models.TextField()
+#     created_at = models.DateTimeField(auto_now_add=True)
