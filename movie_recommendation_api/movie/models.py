@@ -199,6 +199,11 @@ class Rating(BaseModel):
         validators=[MinValueValidator(0.0), MaxValueValidator(10.0)]
     )
 
+    def __str__(self):
+        return f"Rate for {self.movie.title} by" \
+               f"{self.user.username} >>" \
+               f"{self.rating}"
+
 
 class Role(BaseModel):
     """

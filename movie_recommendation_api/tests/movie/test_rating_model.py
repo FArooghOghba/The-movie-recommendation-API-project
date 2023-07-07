@@ -26,6 +26,10 @@ def test_create_rating_successful(first_test_user, first_test_movie) -> None:
         user=first_test_user, movie=first_test_movie, rating=rating_value
     )
 
+    assert str(test_rating) == f"Rate for {test_rating.movie.title} by" \
+                               f"{test_rating.user.username} >>" \
+                               f"{test_rating.rating}"
+
     assert test_rating.user == first_test_user
     assert test_rating.movie == first_test_movie
     assert test_rating.rating == rating_value
