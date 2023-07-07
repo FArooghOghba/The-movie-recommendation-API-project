@@ -1,9 +1,10 @@
 import factory
 
 from movie_recommendation_api.movie.models import (
-    CastCrew, Genre, Movie, Role,
+    CastCrew, Genre, Movie, Rating, Role,
     cast_crew_image_file_path, movie_poster_file_path
 )
+from movie_recommendation_api.tests.factories.user_factories import BaseUserFactory
 from movie_recommendation_api.utils.tests import fake
 
 
@@ -48,10 +49,6 @@ class MovieFactory(factory.django.DjangoModelFactory):
     title = factory.LazyAttribute(lambda _: fake.sentence(nb_words=3))
     slug = factory.LazyAttribute(lambda _: fake.slug())
     synopsis = factory.LazyAttribute(lambda _: fake.paragraph())
-    rating = factory.Faker(
-        'pydecimal',
-        left_digits=1, right_digits=1, positive=True, min_value=1, max_value=10
-    )
     poster = factory.django.ImageField(
         upload_to=movie_poster_file_path
     )
@@ -79,6 +76,41 @@ class MovieFactory(factory.django.DjangoModelFactory):
                 Role.objects.create(
                     name=name, cast_crew=cast_crew, movie=self
                 )
+
+    @factory.post_generation
+    def ratings(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for rating in extracted:
+                self.ratings.add(rating)
+
+
+class RatingFactory(factory.django.DjangoModelFactory):
+    """
+    Factory for creating instances of the Rating model.
+    """
+    class Meta:
+        model = Rating
+
+    user = factory.SubFactory(BaseUserFactory)
+    movie = factory.SubFactory(MovieFactory)
+    rating = factory.LazyFunction(lambda: fake.pydecimal(
+        left_digits=2, right_digits=1, positive=True, min_value=1, max_value=10
+    ))
+
+
+# class ReviewFactory(factory.django.DjangoModelFactory):
+#     """
+#     Factory for creating instances of the Review model.
+#     """
+#     class Meta:
+#         model = Review
+#
+#     user = factory.SubFactory(BaseUserFactory)
+#     movie = factory.SubFactory(MovieFactory)
+#     text = factory.LazyAttribute(lambda _: fake.paragraph())
 
 
 class RoleFactory(factory.django.DjangoModelFactory):

@@ -15,7 +15,6 @@ from movie_recommendation_api.movie.models import (
 )
 
 from datetime import date, timedelta
-from decimal import Decimal
 
 
 pytestmark = pytest.mark.django_db
@@ -45,7 +44,6 @@ def test_create_movie_successful(
     test_movie = Movie.objects.create(
         title='Test Movie Name',
         synopsis='Test synopsis',
-        rating=Decimal(4.5),
         poster='poster.jpg',
         trailer='https://www.example.com/trailer',
         runtime=runtime,
@@ -56,7 +54,6 @@ def test_create_movie_successful(
 
     assert str(test_movie) == 'Test Movie Name'
     assert test_movie.slug == 'test-movie-name'
-    assert test_movie.rating == 4.5
     assert test_movie.poster == 'poster.jpg'
     assert test_movie.trailer == 'https://www.example.com/trailer'
     assert test_movie.runtime == runtime
@@ -67,25 +64,6 @@ def test_create_movie_successful(
 
     test_movie_cast_crews = test_movie.cast_crew.order_by('id')
     assert list(test_movie_cast_crews) == [first_test_cast, first_test_crew]
-
-
-def test_create_movie_with_invalid_rating_return_error(first_test_movie) -> None:
-    """
-    Test that creating a movie with an invalid rating raises a validation error.
-
-    This test sets an invalid rating value (10.5) on the first_test_movie fixture
-    object and calls the full_clean() method. It expects a ValidationError
-    to be raised.
-
-    :param first_test_movie: A fixture providing the test movie object.
-    :return: None
-    """
-
-    test_movie = first_test_movie
-    test_movie.rating = 10.5  # Set an invalid rating value
-
-    with pytest.raises(ValidationError):
-        test_movie.full_clean()
 
 
 def test_create_movie_with_empty_title_return_error(first_test_movie) -> None:

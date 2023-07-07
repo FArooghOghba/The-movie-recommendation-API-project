@@ -62,3 +62,18 @@ def first_test_user() -> BaseUserFactory:
     """
 
     return BaseUserFactory()
+
+
+@pytest.fixture
+def second_test_user() -> BaseUserFactory:
+    """
+    Fixture for creating a test user instance.
+
+    This fixture uses the `BaseUserFactory` factory
+    to create a test user instance. The created user
+    can be used in tests to simulate a user with predefined
+    attributes for testing various scenarios.
+    :return: a test user instance
+    """
+
+    return BaseUserFactory()
