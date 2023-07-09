@@ -16,6 +16,7 @@ pytest_plugins = [
     'movie_recommendation_api.tests.fixtures.cast_crew_fixtures',
     'movie_recommendation_api.tests.fixtures.role_fixtures',
     'movie_recommendation_api.tests.fixtures.rating_fixtures',
+    'movie_recommendation_api.tests.fixtures.review_fixtures',
 ]
 
 

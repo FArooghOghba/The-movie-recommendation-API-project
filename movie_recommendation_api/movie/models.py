@@ -2,13 +2,16 @@ import os
 import uuid
 
 from django.db import models
-from django.db.models.aggregates import Avg
 from django.contrib.auth import get_user_model
+from django.db.models.aggregates import Avg
 from django.urls import reverse
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from movie_recommendation_api.common.models import BaseModel
+from movie_recommendation_api.movie.validators import (
+    validate_content_length, validate_review_content
+)
 
 
 def movie_poster_file_path(instance, filename):
@@ -205,6 +208,35 @@ class Rating(BaseModel):
                f"{self.rating}"
 
 
+class Review(BaseModel):
+    """
+    Represents a review for a movie.
+
+    Attributes:
+        user (ForeignKey): The user who wrote the review.
+        movie (ForeignKey): The movie for which the review is written.
+        content (TextField): The content of the review.
+
+    Methods:
+        __str__(self): Returns a string representation of the review.
+    """
+
+    user = models.ForeignKey(
+        to=get_user_model(), on_delete=models.CASCADE, related_name='reviews'
+    )
+    movie = models.ForeignKey(
+        to=Movie, on_delete=models.CASCADE, related_name='reviews'
+    )
+    content = models.TextField(
+        max_length=512, validators=[validate_review_content, validate_content_length]
+    )
+
+    def __str__(self):
+        return f"Review for {self.movie.title} by" \
+               f"{self.user.username} >>" \
+               f"{self.content[:15]}"
+
+
 class Role(BaseModel):
     """
     Represents the role of a cast/crew member in a movie.
@@ -227,20 +259,3 @@ class Role(BaseModel):
 
     def __str__(self):
         return self.name
-
-
-# class Movie(models.Model):
-#     # Fields of the movie model
-#     title = models.CharField(max_length=255)
-#     ratings = models.ManyToManyField(User, through='Rating')
-#
-#     @property
-#     def average_rating(self):
-#         return self.ratings.aggregate(Avg('rating')).get('rating__avg', 0.0)
-#
-#
-# class Review(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-#     text = models.TextField()
-#     created_at = models.DateTimeField(auto_now_add=True)
