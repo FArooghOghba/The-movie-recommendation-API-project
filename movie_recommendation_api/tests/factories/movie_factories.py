@@ -1,7 +1,7 @@
 import factory
 
 from movie_recommendation_api.movie.models import (
-    CastCrew, Genre, Movie, Rating, Role,
+    CastCrew, Genre, Movie, Rating, Review, Role,
     cast_crew_image_file_path, movie_poster_file_path
 )
 from movie_recommendation_api.tests.factories.user_factories import BaseUserFactory
@@ -101,16 +101,16 @@ class RatingFactory(factory.django.DjangoModelFactory):
     ))
 
 
-# class ReviewFactory(factory.django.DjangoModelFactory):
-#     """
-#     Factory for creating instances of the Review model.
-#     """
-#     class Meta:
-#         model = Review
-#
-#     user = factory.SubFactory(BaseUserFactory)
-#     movie = factory.SubFactory(MovieFactory)
-#     text = factory.LazyAttribute(lambda _: fake.paragraph())
+class ReviewFactory(factory.django.DjangoModelFactory):
+    """
+    Factory for creating instances of the Review model.
+    """
+    class Meta:
+        model = Review
+
+    user = factory.SubFactory(BaseUserFactory)
+    movie = factory.SubFactory(MovieFactory)
+    content = factory.LazyAttribute(lambda _: fake.paragraph())
 
 
 class RoleFactory(factory.django.DjangoModelFactory):
