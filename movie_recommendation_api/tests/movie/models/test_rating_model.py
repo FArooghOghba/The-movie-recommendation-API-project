@@ -105,7 +105,9 @@ def test_create_rating_for_movies_successful(
     assert first_test_movie.average_rating == expected_average_for_first_movie
 
     test_first_movie_ratings_count = first_test_movie.ratings.count()
-    assert test_first_movie_ratings_count == len([first_rate_for_first_movie, second_rate_for_first_movie])
+    assert test_first_movie_ratings_count == len(
+        [first_rate_for_first_movie, second_rate_for_first_movie]
+    )
 
     expected_average_for_second_movie = first_rate_for_second_movie.rating
     assert second_test_movie.average_rating == expected_average_for_second_movie
@@ -151,7 +153,9 @@ def test_create_rating_for_users_successful(
     )
 
     first_user_ratings = Rating.objects.filter(user=first_test_user)
-    assert list(first_user_ratings) == [first_rate_for_first_user, second_rate_for_first_user]
+    assert list(first_user_ratings) == [
+        first_rate_for_first_user, second_rate_for_first_user
+    ]
 
     second_user_ratings = Rating.objects.filter(user=second_test_user)
     assert list(second_user_ratings) == [first_rate_for_second_user]

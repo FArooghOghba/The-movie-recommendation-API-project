@@ -6,10 +6,12 @@ def validate_review_content(value: str) -> None:
     """
     Custom validator for review content.
 
-    Validates that the review content is not empty or contains only whitespace characters.
+    Validates that the review content is not empty or contains
+    only whitespace characters.
 
     :param value: The review content.
-    :raises ValidationError: If the content is empty or contains only whitespace characters.
+    :raises ValidationError: If the content is empty or contains
+            only whitespace characters.
     """
 
     if not value or value.strip() == '':
