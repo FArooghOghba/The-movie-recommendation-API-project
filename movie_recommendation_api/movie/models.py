@@ -203,7 +203,7 @@ class Rating(BaseModel):
     )
 
     def __str__(self):
-        return f"Rate for {self.movie.title} by" \
+        return f"Rate for {self.movie.title} by " \
                f"{self.user.username} >>" \
                f"{self.rating}"
 

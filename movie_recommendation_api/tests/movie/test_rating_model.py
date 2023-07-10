@@ -26,7 +26,7 @@ def test_create_rating_successful(first_test_user, first_test_movie) -> None:
         user=first_test_user, movie=first_test_movie, rating=rating_value
     )
 
-    assert str(test_rating) == f"Rate for {test_rating.movie.title} by" \
+    assert str(test_rating) == f"Rate for {test_rating.movie.title} by " \
                                f"{test_rating.user.username} >>" \
                                f"{test_rating.rating}"
 
@@ -62,7 +62,7 @@ def test_create_rating_with_wrong_rating_return_error(
         test_rating.full_clean()
 
 
-def test_create_rating_for_movie_successful(
+def test_create_rating_for_movies_successful(
     first_test_movie, second_test_movie, first_test_user, second_test_user
 ) -> None:
     """
@@ -81,29 +81,77 @@ def test_create_rating_for_movie_successful(
     :return: None
     """
 
-    first_test_rating = Rating.objects.create(
+    first_rate_for_first_movie = Rating.objects.create(
         user=first_test_user,
         movie=first_test_movie,
         rating=6.0
     )
 
-    second_test_rating = Rating.objects.create(
+    second_rate_for_first_movie = Rating.objects.create(
         user=second_test_user,
         movie=first_test_movie,
         rating=5.0
     )
 
-    Rating.objects.create(
+    first_rate_for_second_movie = Rating.objects.create(
         user=first_test_user,
         movie=second_test_movie,
         rating=7.0
     )
 
-    expected_average = (first_test_rating.rating + second_test_rating.rating) / 2
-    assert first_test_movie.average_rating == expected_average
+    expected_average_for_first_movie = (
+       first_rate_for_first_movie.rating + second_rate_for_first_movie.rating
+                       ) / 2
+    assert first_test_movie.average_rating == expected_average_for_first_movie
 
     test_first_movie_ratings_count = first_test_movie.ratings.count()
-    assert test_first_movie_ratings_count == 2
+    assert test_first_movie_ratings_count == len([first_rate_for_first_movie, second_rate_for_first_movie])
+
+    expected_average_for_second_movie = first_rate_for_second_movie.rating
+    assert second_test_movie.average_rating == expected_average_for_second_movie
 
     test_second_movie_ratings_count = second_test_movie.ratings.count()
-    assert test_second_movie_ratings_count == 1
+    assert test_second_movie_ratings_count == len([first_rate_for_second_movie])
+
+
+def test_create_rating_for_users_successful(
+    first_test_movie, second_test_movie, first_test_user, second_test_user
+) -> None:
+    """
+    Test that ratings can be created for users successfully and the average
+    rating is calculated correctly.
+
+    This test creates multiple ratings for different users and verifies
+    that they are created successfully. It checks the count of ratings
+    associated with each user.
+
+    :param first_test_movie: A fixture providing the first test movie object.
+    :param second_test_movie: A fixture providing the second test movie object.
+    :param first_test_user: A fixture providing the first test user object.
+    :param second_test_user: A fixture providing the second test user object.
+    :return: None
+    """
+
+    first_rate_for_first_user = Rating.objects.create(
+        user=first_test_user,
+        movie=first_test_movie,
+        rating=6.0
+    )
+
+    second_rate_for_first_user = Rating.objects.create(
+        user=first_test_user,
+        movie=second_test_movie,
+        rating=5.0
+    )
+
+    first_rate_for_second_user = Rating.objects.create(
+        user=second_test_user,
+        movie=first_test_movie,
+        rating=7.0
+    )
+
+    first_user_ratings = Rating.objects.filter(user=first_test_user)
+    assert list(first_user_ratings) == [first_rate_for_first_user, second_rate_for_first_user]
+
+    second_user_ratings = Rating.objects.filter(user=second_test_user)
+    assert list(second_user_ratings) == [first_rate_for_second_user]
