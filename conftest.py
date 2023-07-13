@@ -4,7 +4,7 @@ Conftest for tests
 
 import pytest
 
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APIRequestFactory
 
 from datetime import datetime
 
@@ -21,12 +21,25 @@ pytest_plugins = [
 
 
 @pytest.fixture
-def api_client():
+def api_client() -> APIClient:
     """
     Fixture for creating an instance of the Django REST Framework's APIClient.
     :return: APIClient()
     """
     return APIClient()
+
+
+@pytest.fixture
+def api_request() -> APIRequestFactory:
+    """
+    Fixture for creating an instance of the APIRequestFactory.
+
+    This fixture provides an instance of the APIRequestFactory, which is a utility class
+    provided by Django REST Framework for creating API requests in tests.
+
+    :return: APIRequestFactory: An instance of the APIRequestFactory.
+    """
+    return APIRequestFactory()
 
 
 @pytest.fixture
