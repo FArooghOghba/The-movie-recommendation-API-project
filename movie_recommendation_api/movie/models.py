@@ -1,10 +1,10 @@
+import decimal
 import os
 import uuid
 
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.aggregates import Avg
-from django.urls import reverse
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -152,10 +152,10 @@ class Movie(BaseModel):
         ordering = ['-release_date']
 
     @property
-    def average_rating(self) -> float:
+    def average_rating(self) -> decimal:
         """
         Calculates and returns the average rating of the movie.
-        :return: float: The average rating of the movie.
+        :return: decimal: The average rating of the movie.
         """
         rating_average = self.movie_ratings.aggregate(
             rating_avg=Avg('rating')
@@ -163,12 +163,8 @@ class Movie(BaseModel):
 
         return rating_average
 
-    def get_absolute_url(self) -> str:
-        """
-        Returns the absolute URL of the movie.
-        :return: str: The absolute URL of the movie.
-        """
-        return reverse('movie:single', kwargs={'movie_slug': self.slug})
+    def get_snippet(self) -> str:
+        return f'{self.synopsis[:15]}...'
 
     def save(self, *args, **kwargs):
         """
