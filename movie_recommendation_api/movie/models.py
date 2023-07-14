@@ -127,8 +127,9 @@ class Movie(BaseModel):
         get_absolute_url(self): Returns the absolute URL of the movie.
         save(self, *args, **kwargs): Overrides the save method to generate
         the slug based on the title.
-        __str__(self): Returns a string representation of the movie.
         average_rating(self): Calculates and returns the average rating of the movie.
+        get_snippet(self): Returns a shortened snippet of the movie's synopsis.
+        __str__(self): Returns a string representation of the movie.
     """
 
     title = models.CharField(max_length=255, unique=True)
@@ -164,6 +165,10 @@ class Movie(BaseModel):
         return rating_average
 
     def get_snippet(self) -> str:
+        """
+        Returns a shortened snippet of the movie's synopsis.
+        :return: str: The snippet of the movie's synopsis.
+        """
         return f'{self.synopsis[:15]}...'
 
     def save(self, *args, **kwargs):
