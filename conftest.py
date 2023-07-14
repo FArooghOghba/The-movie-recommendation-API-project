@@ -34,8 +34,9 @@ def api_request() -> APIRequestFactory:
     """
     Fixture for creating an instance of the APIRequestFactory.
 
-    This fixture provides an instance of the APIRequestFactory, which is a utility class
-    provided by Django REST Framework for creating API requests in tests.
+    This fixture provides an instance of the APIRequestFactory,
+    which is a utility class provided by Django REST Framework
+    for creating API requests in tests.
 
     :return: APIRequestFactory: An instance of the APIRequestFactory.
     """
