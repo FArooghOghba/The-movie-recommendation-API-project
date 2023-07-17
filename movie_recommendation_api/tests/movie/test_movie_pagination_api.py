@@ -137,11 +137,35 @@ def test_get_movie_list_pagination_next_previous_pages(
     # Requesting all movies with limit 10, should not have next or previous page.
     (10, 0, False, False),
 ])
-def test_get_movie_list_pagination_request_next_previous(
+def test_get_movie_list_pagination_next_previous_pages_request(
         api_client, api_request, five_test_movies,
         limit, offset, test_next_page, test_previous_page
 ) -> None:
 
+    """
+    Test the next and previous pages functionality of the movie list endpoint.
+
+    This test case verifies that the movie list endpoint correctly indicates
+    the availability of next and previous pages based on the provided limit
+    and offset parameters.
+
+    :param api_client: (APIClient): An instance of the Django REST Framework's
+        APIClient.
+    :param api_request: (RequestFactory): An instance of Django's RequestFactory
+        for creating test requests.
+    :param five_test_movies: (pytest fixture): A fixture that creates five
+        test movies in the database.
+    :param limit: (int): The maximum number of movies to be returned per page.
+    :param offset: (int): The starting position for fetching movies in
+        the result set.
+    :param test_next_page: (bool): Indicates whether the expected response
+        should have a next page.
+    :param test_previous_page: (bool): Indicates whether the expected response
+        should have a previous page.
+    :return: None
+    """
+
+    # Create a request for the movie list endpoint with the given limit and offset
     request = api_request.get(path=MOVIE_LIST_URL)
     query_params = {'limit': limit, 'offset': offset}
     response = api_client.get(
@@ -157,25 +181,28 @@ def test_get_movie_list_pagination_request_next_previous(
                             f"limit={limit}&offset={offset + limit}"
         assert next_page_url == expected_next_url
 
-        previous_page_response = api_client.get(path=next_page_url, request=request)
-        assert previous_page_response.status_code == status.HTTP_200_OK
+        next_page_response = api_client.get(path=next_page_url, request=request)
+        assert next_page_response.status_code == status.HTTP_200_OK
 
-        previous_page_offset = previous_page_response.data['offset']
-        previous_page_limit = previous_page_response.data['limit']
+        # Calculate the expected offset and limit for the next page results
+        next_page_offset = next_page_response.data['offset']
+        next_page_limit = next_page_response.data['limit']
 
         test_movies = Movie.objects.all()
         test_movies_output_serializer = MovieOutPutModelSerializer(
             test_movies, many=True, context={'request': request}
         )
-        previous_page_results_count = len(
+
+        # Get the expected results for the next page based on offset and limit
+        next_page_results_count = len(
             test_movies_output_serializer.data[
-                previous_page_offset: previous_page_offset + previous_page_limit
+                next_page_offset: next_page_offset + next_page_limit
             ]
         )
 
         assert len(
-            previous_page_response.data['results']
-        ) == previous_page_results_count
+            next_page_response.data['results']
+        ) == next_page_results_count
 
     # If there is a previous page, assert the previous page URL
     if test_previous_page:
@@ -193,6 +220,7 @@ def test_get_movie_list_pagination_request_next_previous(
         )
         assert previous_page_response.status_code == status.HTTP_200_OK
 
+        # Calculate the expected offset and limit for the previous page results
         previous_page_offset = previous_page_response.data['offset']
         previous_page_limit = previous_page_response.data['limit']
 
@@ -200,6 +228,8 @@ def test_get_movie_list_pagination_request_next_previous(
         test_movies_output_serializer = MovieOutPutModelSerializer(
             test_movies, many=True, context={'request': request}
         )
+
+        # Get the expected results for the previous page based on offset and limit
         previous_page_results_count = len(
             test_movies_output_serializer.data[
                 previous_page_offset: previous_page_offset + previous_page_limit
