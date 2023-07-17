@@ -2,7 +2,6 @@ from collections import OrderedDict
 
 from typing import Type
 
-from django.core.serializers import Serializer
 from django.db.models import QuerySet
 
 from rest_framework.pagination import LimitOffsetPagination
@@ -41,9 +40,22 @@ def get_paginated_response(
 
 
 def get_paginated_response_context(
-    *, pagination_class, serializer_class: Type[Serializer()],
-    queryset, request, view
+    *, pagination_class: Type[LimitOffsetPagination], serializer_class,
+    queryset: QuerySet, request, view: APIView
 ):
+
+    """
+    Return a paginated response with request context for a queryset using
+    the specified pagination and serializer classes.
+
+    :param pagination_class: (type): The pagination class to use.
+    :param serializer_class: (type): The serializer class to use.
+    :param queryset: (QuerySet): The queryset to paginate.
+    :param request: The request object.
+    :param view: (APIView): The API view.
+    :return: Response: The paginated response.
+    """
+
     paginator = pagination_class()
 
     page = paginator.paginate_queryset(queryset, request, view=view)
