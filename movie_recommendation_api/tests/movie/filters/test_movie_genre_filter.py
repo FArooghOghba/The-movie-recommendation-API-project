@@ -30,7 +30,8 @@ def test_get_movie_by_filter_exact_genre_title(
     This test verifies that the movie list endpoint correctly filter
      movies based on genre titles.
 
-    :param api_client: (APIClient): An instance of the Django REST Framework's APIClient.
+    :param api_client: (APIClient): An instance of the Django REST Framework's
+    APIClient.
     :param first_test_genre: A fixture providing the first test genre object.
     :param second_test_genre: A fixture providing the second test genre object.
     :param third_test_genre: A fixture providing the third test genre object.
@@ -40,7 +41,8 @@ def test_get_movie_by_filter_exact_genre_title(
     to be used for filtering movies.
     :param expected_movie_ids: (set): The set of expected movie IDs that should be
     returned after filtering.
-    :param request: (fixture request): Pytest fixture to access the requesting test context.
+    :param request: (fixture request): Pytest fixture to access the requesting
+    test context.
     :return: None
     """
 
@@ -51,7 +53,8 @@ def test_get_movie_by_filter_exact_genre_title(
         filters = []
         split_test_genres = genres_filter.split(',')
         for genre in split_test_genres:
-            # Get the genre object from the fixture name and add its title to the filters list
+            # Get the genre object from the fixture name and add its title
+            # to the filters list
             get_test_genre_fixture = request.getfixturevalue(genre.strip())
             filters.append(get_test_genre_fixture.title)
 
@@ -104,9 +107,12 @@ def test_get_movie_by_filter_partial_genre_title(
         AssertionError: If the test assertions fail.
 
     :param api_client: An instance of the Django REST Framework's APIClient.
-    :param three_test_movies: A fixture that creates three test movies in the database.
-    :param first_test_genre: A fixture that creates the first test genre in the database.
-    :param second_test_genre: A fixture that creates the second test genre in the database.
+    :param three_test_movies: A fixture that creates three test
+    movies in the database.
+    :param first_test_genre: A fixture that creates the first
+    test genre in the database.
+    :param second_test_genre: A fixture that creates the second
+    test genre in the database.
     :return: None
     """
 
@@ -129,3 +135,57 @@ def test_get_movie_by_filter_partial_genre_title(
     response_movie_ids = {movie['id'] for movie in response.data['results']}
 
     assert response_movie_ids == expected_movies
+
+
+def test_get_movie_by_filter_genre_title_more_than_limit_should_return_error(
+        api_client, first_test_movie, first_test_genre, second_test_genre,
+        third_test_genre, forth_test_genre, fifth_test_genre
+) -> None:
+
+    """
+    Test filtering movies by genre title with more than the allowed limit.
+
+    This test verifies that when the client attempts to filter movies by
+    genre title with more than the allowed limit (in this case, more than 4 genres),
+    the API responds with a 'HTTP 400 Bad Request' error and provides an appropriate
+    error message.
+
+    The test constructs a comma-separated string of genre titles exceeding the limit
+    and includes it in the filter_params. It then makes a GET request to the movie
+    list endpoint with the provided filters. The test expects the API to respond with
+    an HTTP 400 status code and an error message indicating that the client cannot
+    add more than 4 genres.
+
+    Raises:
+        AssertionError: If the test assertions fail.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_movie: A fixture that creates the first test
+    movie in the database.
+    :param first_test_genre: A fixture that creates the first test
+    genre in the database.
+    :param second_test_genre: A fixture that creates the second test
+    genre in the database.
+    :param third_test_genre: A fixture that creates the third test
+    genre in the database.
+    :param forth_test_genre: A fixture that creates the forth test
+    genre in the database.
+    :param fifth_test_genre: A fixture that creates the fifth test
+    genre in the database.
+    :return: None
+    """
+
+    # Apply genre title with more than the allowed limit
+    more_than_limit_genre_title = f'{first_test_genre.title}, ' \
+                                  f'{second_test_genre.title}, ' \
+                                  f'{third_test_genre.title}, ' \
+                                  f'{forth_test_genre.title}, ' \
+                                  f'{fifth_test_genre.title}'
+    filter_params = {'genre__title': more_than_limit_genre_title}
+
+    response = api_client.get(path=MOVIE_LIST_URL, data=filter_params)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # Check the error message in the response data
+    expected_error_message = "Filter Error - You cannot add more than 4 genres"
+    assert response.data["detail"] == expected_error_message
