@@ -153,6 +153,55 @@ def test_create_movie_with_exists_genre_will_not_create_duplicates(
     ]
 
 
+def test_create_movie_with_exists_cast_crew_will_not_create_duplicates(
+        first_test_movie, first_test_cast, first_test_crew,
+        second_test_cast, second_test_crew
+) -> None:
+
+    """
+    Test case to ensure that adding casts/crews to a movie using the ManyToManyField
+    'cast_crew' will not create duplicate relationships.
+
+    Remarks:
+        This test ensures that the ManyToManyField 'cast_crew' maintains uniqueness,
+        and it does not allow duplicate relationships between movies and cast_crews.
+        In this test, we add the same cast 'first_test_cast' and 'first_test_crew' to
+        'first_test_movie.cast_crew', along with 'second_test_cast' and
+        'second_test_crew'. The test then checks whether the 'cast_crew'
+        field of the 'first_test_movie' contains only unique cast instances,
+        without any duplicates and add the new ones.
+
+    Expected Result:
+        The 'cast_crew' field of the 'first_test_movie' should contain the casts
+        'first_test_cast', 'second_test_cast', 'first_test_crew', and
+        'second_test_crew without any duplicates.
+
+    Raises:
+        AssertionError: If the 'cast_crew' field contains duplicates or does not
+        contain the expected cast instances.
+
+    :param first_test_movie: (Movie): A fixture representing the first test
+    movie instance.
+    :param first_test_cast: (CastCrew): A fixture representing the first test
+    cast instance.
+    :param second_test_cast: (CastCrew): A fixture representing the second test
+    cast instance.
+    :param first_test_crew: (CastCrew): A fixture representing the first test
+    crew instance.
+    :param second_test_crew: (CastCrew): A fixture representing the second test
+    crew instance.
+    :return: None
+    """
+
+    first_test_movie.cast_crew.add(
+        first_test_cast, second_test_cast, first_test_crew, second_test_crew
+    )
+    test_movie_genres = first_test_movie.cast_crew.order_by('id')
+    assert list(test_movie_genres) == [
+        first_test_crew, first_test_cast, second_test_cast, second_test_crew
+    ]
+
+
 @patch(target='movie_recommendation_api.movie.models.uuid.uuid4')
 def test_movie_poster_create_file_name_uuid_for_image_path(
     mock_uuid, first_test_movie
