@@ -101,3 +101,19 @@ def five_test_movies() -> QuerySet[MovieFactory]:
 
     test_movies = MovieFactory.create_batch(5)
     yield test_movies
+
+
+@pytest.fixture
+def three_test_movies() -> QuerySet[MovieFactory]:
+    """
+    Fixture that creates a batch of three test movies.
+
+    This fixture uses the MovieFactory to create a batch of three test movies
+    and yields the created movies. The test movies can be used in tests that
+    require multiple movie objects.
+
+    :return: A list of three test movie objects.
+    """
+
+    test_movies = MovieFactory.create_batch(3)
+    yield test_movies

@@ -19,7 +19,7 @@ MOVIE_LIST_URL = reverse('api:movie:list')
         ('', {1, 2, 3, 4, 5}),
     ]
 )
-def test_get_movie_by_filter_exact_genre(
+def test_get_movie_by_filter_exact_genre_title(
     api_client, first_test_genre, second_test_genre, third_test_genre,
     five_test_movies, genres_filter, expected_movie_ids, request
 ) -> None:
@@ -77,6 +77,55 @@ def test_get_movie_by_filter_exact_genre(
     assert response.status_code == status.HTTP_200_OK
 
     expected_movies = expected_movie_ids
+    response_movie_ids = {movie['id'] for movie in response.data['results']}
+
+    assert response_movie_ids == expected_movies
+
+
+def test_get_movie_by_filter_partial_genre_title(
+    api_client, three_test_movies, first_test_genre, second_test_genre
+) -> None:
+
+    """
+    Test partial filtering of movies by genre title.
+
+    This test verifies that the movie list endpoint correctly filters movies
+    based on the first three characters of the genre title. It creates three
+    test movies and assigns genres to them. Then, it applies the partial
+    filtering using the `genre__title` field with the first three characters
+    of the `first_test_genre` title.
+
+    The test expects that only `first_test_movie` and `third_test_movie` should
+    be included in the response, as they have genres whose titles start with the
+    provided filter. The response is then compared with the expected set of
+    movie IDs.
+
+    Raises:
+        AssertionError: If the test assertions fail.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param three_test_movies: A fixture that creates three test movies in the database.
+    :param first_test_genre: A fixture that creates the first test genre in the database.
+    :param second_test_genre: A fixture that creates the second test genre in the database.
+    :return: None
+    """
+
+    first_test_movie, \
+        second_test_movie, \
+        third_test_movie = three_test_movies
+
+    first_test_movie.genre.add(first_test_genre, second_test_genre)
+    second_test_movie.genre.add(second_test_genre)
+    third_test_movie.genre.add(first_test_genre)
+
+    # Apply the partial filtering using the first three characters of the genre title
+    partial_genre_title = first_test_genre.title[:3]
+    filter_params = {'genre__title': partial_genre_title}
+
+    response = api_client.get(path=MOVIE_LIST_URL, data=filter_params)
+    assert response.status_code == status.HTTP_200_OK
+
+    expected_movies = {first_test_movie.id, third_test_movie.id}
     response_movie_ids = {movie['id'] for movie in response.data['results']}
 
     assert response_movie_ids == expected_movies
