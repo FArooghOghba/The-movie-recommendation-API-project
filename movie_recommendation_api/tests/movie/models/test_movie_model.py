@@ -107,6 +107,52 @@ def test_create_movie_with_exists_title_return_error(
         test_movie.full_clean()
 
 
+def test_create_movie_with_exists_genre_will_not_create_duplicates(
+    first_test_movie, first_test_genre, second_test_genre, third_test_genre
+) -> None:
+
+    """
+    Test case to ensure that adding genres to a movie using the ManyToManyField
+    'genre' will not create duplicate relationships.
+
+    Remarks:
+        This test ensures that the ManyToManyField 'genre' maintains uniqueness,
+        and it does not allow duplicate relationships between movies and genres.
+        In this test, we add the same genre 'first_test_genre' twice to
+        'first_test_movie.genre', along with 'second_test_genre' and
+        'third_test_genre'. The test then checks whether the 'genre'
+        field of the 'first_test_movie' contains only unique genre instances,
+        without any duplicates.
+
+    Expected Result:
+        The 'genre' field of the 'first_test_movie' should contain the genres
+        'first_test_genre', 'second_test_genre', and 'third_test_genre',
+        without any duplicates.
+
+    Raises:
+        AssertionError: If the 'genre' field contains duplicates or does not contain
+        the expected genre instances.
+
+    :param first_test_movie: (Movie): A fixture representing the first test
+    movie instance.
+    :param first_test_genre: (Genre): A fixture representing the first test
+    genre instance.
+    :param second_test_genre: (Genre): A fixture representing the second test
+    genre instance.
+    :param third_test_genre: (Genre): A fixture representing the third test
+    genre instance.
+    :return: None
+    """
+
+    first_test_movie.genre.add(
+        first_test_genre, first_test_genre, second_test_genre, third_test_genre
+    )
+    test_movie_genres = first_test_movie.genre.order_by('id')
+    assert list(test_movie_genres) == [
+        first_test_genre, second_test_genre, third_test_genre
+    ]
+
+
 @patch(target='movie_recommendation_api.movie.models.uuid.uuid4')
 def test_movie_poster_create_file_name_uuid_for_image_path(
     mock_uuid, first_test_movie
