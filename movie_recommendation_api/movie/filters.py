@@ -4,7 +4,7 @@ from django.contrib.postgres.search import SearchVector
 from django.db.models import QuerySet
 # from django.utils import timezone
 
-# from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException
 
 from movie_recommendation_api.movie.models import Movie
 
@@ -17,6 +17,7 @@ class MovieFilterSet(filters.FilterSet):
         title (CharFilter): Filter for exact match of the movie title.
         search (CharFilter): Filter for searching movies by title
                              using full-text search.
+        genre__title (CharFilter): Filter for searching movies by genre titles.
 
     Methods:
         filter_search(self, queryset, name, value): Custom filter method
@@ -32,14 +33,9 @@ class MovieFilterSet(filters.FilterSet):
 
     title = filters.CharFilter(field_name='title', lookup_expr='icontains')
     search = filters.CharFilter(field_name='title', method="filter_search")
-    # genre = filters.CharFilter(field_name='genre', lookup_expr='icontains')
-    # cast_crew__in = filters.CharFilter(
-    #   field_name='cast_crew', method="filter_cast_crew__in"
-    # )
-    # release_date__range = filters.CharFilter(
-    #   field_name='release_date', method="filter_release_date__range"
-    # )
-    # rating__range = filters.
+    genre__title = filters.CharFilter(
+        field_name='genre', method='filter_genre__title'
+    )
 
     def filter_search(
             self, queryset: QuerySet[Movie], name: str, value: str
@@ -54,6 +50,43 @@ class MovieFilterSet(filters.FilterSet):
         :return: queryset: The filtered movie queryset.
         """
         return queryset.annotate(search=SearchVector("title")).filter(search=value)
+
+    def filter_genre__title(
+            self, queryset: QuerySet[Movie], name: str, value: str
+    ) -> QuerySet[Movie]:
+
+        """
+        Custom filter method for filtering movies by genre titles.
+
+        The genre__title filter allows filtering movies based on
+        comma-separated genre titles. It accepts a list of genre
+        titles and returns movies that have any of the specified genres.
+
+        :param queryset: The movie queryset to be filtered.
+        :param name: The name of the field to be filtered.
+        :param value: The genre titles to filter movies by (comma-separated).
+        :return: queryset: The filtered movie queryset.
+        :raises: APIException: If the number of genres provided exceeds
+        the maximum allowed limit.
+        """
+
+        limit = 4
+        genres = value.split(",")
+
+        if len(genres) > limit:
+            raise APIException(f"You cannot add more than {limit} genres")
+        for genre in genres:
+            queryset = queryset.filter(genre__title__icontains=genre.strip())
+
+        return queryset
+
+    # cast_crew__in = filters.CharFilter(
+    #   field_name='cast_crew', method="filter_cast_crew__in"
+    # )
+    # release_date__range = filters.CharFilter(
+    #   field_name='release_date', method="filter_release_date__range"
+    # )
+    # rating__range = filters.
 
     # def filter_cast_crew__in(self, queryset, name, value):
     #     limit = 10

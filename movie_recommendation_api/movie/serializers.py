@@ -32,7 +32,7 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = [
-            'title', 'poster', 'genre',
+            'id', 'title', 'poster', 'genre',
             'rate', 'movie_detail_url', 'synopsis_snippet'
         ]
 
@@ -77,10 +77,12 @@ class MovieFilterSerializer(serializers.Serializer):
     Fields:
         title (CharField): The title of the movie.
         search (CharField): The search query for filtering movies.
+        genre__title (CharField): The genres of the movies.
     """
 
     title = serializers.CharField(required=False, max_length=100)
     search = serializers.CharField(required=False, max_length=100)
+    genre__title = serializers.CharField(required=False, max_length=100)
     # created_at__range = serializers.CharField(required=False, max_length=100)
     # author__in = serializers.CharField(required=False, max_length=100)
     # slug = serializers.CharField(required=False, max_length=100)
