@@ -95,7 +95,8 @@ def test_get_movie_by_filter_partial_title_field(
     ('title', 'search'),
 )
 def test_get_movie_by_filter_case_insensitive_title(
-    api_client, api_request, first_test_movie, second_test_movie, filtering_field
+    api_client, api_request, first_test_movie, second_test_movie, filtering_field,
+    django_db_reset_sequences
 ) -> None:
 
     """

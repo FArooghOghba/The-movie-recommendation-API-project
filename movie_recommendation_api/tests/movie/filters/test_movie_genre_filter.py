@@ -21,7 +21,8 @@ MOVIE_LIST_URL = reverse('api:movie:list')
 )
 def test_get_movie_by_filter_exact_genre_title(
     api_client, first_test_genre, second_test_genre, third_test_genre,
-    five_test_movies, genres_filter, expected_movie_ids, request
+    five_test_movies, genres_filter, expected_movie_ids, request,
+    django_db_reset_sequences
 ) -> None:
 
     """
