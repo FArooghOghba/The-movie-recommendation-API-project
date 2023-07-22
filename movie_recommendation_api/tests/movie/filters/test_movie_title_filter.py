@@ -39,6 +39,7 @@ def test_get_movie_by_filter_exact_title(
     :param third_test_movie: A fixture providing the third test movie object.
     :param filtering_field: The filtering field for the title,
            first one is 'title' field and the second one 'search' field
+
     :return: None
     """
 
@@ -53,8 +54,13 @@ def test_get_movie_by_filter_exact_title(
 
 
 # @pytest.mark.xfail
+@pytest.mark.parametrize(
+    'filtering_field',
+    ('title', 'search'),
+)
 def test_get_movie_by_filter_partial_title_field(
-    api_client, first_test_movie, second_test_movie, third_test_movie
+    api_client, first_test_movie, second_test_movie, third_test_movie,
+    filtering_field, django_db_reset_sequences
 ) -> None:
 
     """
@@ -69,23 +75,28 @@ def test_get_movie_by_filter_partial_title_field(
     :param first_test_movie: A fixture providing the first test movie object.
     :param second_test_movie: A fixture providing the second test movie object.
     :param third_test_movie: A fixture providing the third test movie object.
+    :param filtering_field: The filtering field for the title,
+           first one is 'title' field and the second one 'search' field
+    :param django_db_reset_sequences: A fixture that resets database sequences
+           to prevent primary key conflicts.
+
     :return: None
     """
 
     first_test_movie.title = "Star Trek"
     first_test_movie.save()
 
-    second_test_movie.title = "Star Wars"
+    second_test_movie.title = "Stardust"
     second_test_movie.save()
 
-    filter_params = {'search': 'star'}
+    filter_params = {filtering_field: 'star'}
 
     response = api_client.get(path=MOVIE_LIST_URL, data=filter_params)
-
+    print(response.content)
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data['results']) == 2
     assert {result['title'] for result in response.data['results']} == {
-        'Star Trek', 'Star Wars'
+        'Star Trek', 'Stardust'
     }
 
 
@@ -118,18 +129,22 @@ def test_get_movie_by_filter_case_insensitive_title(
     :param first_test_movie: A fixture providing the first test movie object.
     :param second_test_movie: A fixture providing the second test movie object.
     :param filtering_field: The filtering field for the title,
-           first one is 'title' field and the second one 'search' field
+           first one is 'title' field and the second one 'search' field.
+    :param django_db_reset_sequences: A fixture that resets database sequences
+           to prevent primary key conflicts.
+
     :return: None
     """
 
-    title = first_test_movie.title.upper()  # Use the uppercase version of the title
+    first_test_movie_title = first_test_movie.title
+    test_title = first_test_movie_title.upper()  # Use the uppercase version of the title
     request = api_request.get(path=MOVIE_LIST_URL)
     response = api_client.get(
-        path=MOVIE_LIST_URL, request=request, data={filtering_field: title}
+        path=MOVIE_LIST_URL, request=request, data={filtering_field: test_title}
     )
     assert response.status_code == status.HTTP_200_OK
 
-    filtered_movies = Movie.objects.filter(title__iexact=title)
+    filtered_movies = Movie.objects.filter(title=first_test_movie_title)
     filtered_movies_output_serializer = MovieOutPutModelSerializer(
         filtered_movies, many=True, context={'request': request}
     )
