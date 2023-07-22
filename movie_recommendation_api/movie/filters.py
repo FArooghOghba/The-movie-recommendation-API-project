@@ -1,7 +1,7 @@
 import django_filters as filters
 
 from django.contrib.postgres.search import SearchVector
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 # from django.utils import timezone
 
 from rest_framework.exceptions import APIException
@@ -32,7 +32,7 @@ class MovieFilterSet(filters.FilterSet):
     """
 
     title = filters.CharFilter(field_name='title', lookup_expr='icontains')
-    search = filters.CharFilter(field_name='title', method="filter_search")
+    search = filters.CharFilter(method="filter_search")
     genre__title = filters.CharFilter(
         field_name='genre', method='filter_genre__title'
     )
@@ -49,7 +49,7 @@ class MovieFilterSet(filters.FilterSet):
         :param value: The search value.
         :return: queryset: The filtered movie queryset.
         """
-        return queryset.annotate(search=SearchVector("title")).filter(search=value)
+        return queryset.filter(Q(title__icontains=value) | Q(synopsis__icontains=value))
 
     def filter_genre__title(
             self, queryset: QuerySet[Movie], name: str, value: str
@@ -113,4 +113,4 @@ class MovieFilterSet(filters.FilterSet):
 
     class Meta:
         model = Movie
-        fields = ('title', 'genre')
+        fields = ('title', 'genre', 'search')
