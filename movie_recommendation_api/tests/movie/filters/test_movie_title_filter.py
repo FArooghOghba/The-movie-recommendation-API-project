@@ -137,7 +137,9 @@ def test_get_movie_by_filter_case_insensitive_title(
     """
 
     first_test_movie_title = first_test_movie.title
-    test_title = first_test_movie_title.upper()  # Use the uppercase version of the title
+
+    # Use the uppercase version of the title
+    test_title = first_test_movie_title.upper()
     request = api_request.get(path=MOVIE_LIST_URL)
     response = api_client.get(
         path=MOVIE_LIST_URL, request=request, data={filtering_field: test_title}
