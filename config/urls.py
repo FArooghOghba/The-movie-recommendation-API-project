@@ -14,4 +14,9 @@ urlpatterns = [
     path("redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     path('admin/', admin.site.urls),
     path('api/', include(('movie_recommendation_api.api.urls', 'api'))),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+
+if settings.DEBUG:
+    urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
