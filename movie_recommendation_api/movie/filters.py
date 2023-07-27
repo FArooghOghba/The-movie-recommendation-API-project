@@ -1,6 +1,5 @@
 import django_filters as filters
 
-from django.contrib.postgres.search import SearchVector
 from django.db.models import Q, QuerySet
 # from django.utils import timezone
 
@@ -42,14 +41,17 @@ class MovieFilterSet(filters.FilterSet):
     ) -> QuerySet[Movie]:
 
         """
-        Custom filter method for performing full-text search on movie titles.
+        Custom filter method for performing full-text search on
+        movie titles and synopsis.
 
         :param queryset: The movie queryset to be filtered.
         :param name: The name of the field to be filtered.
         :param value: The search value.
         :return: queryset: The filtered movie queryset.
         """
-        return queryset.filter(Q(title__icontains=value) | Q(synopsis__icontains=value))
+        return queryset.filter(
+            Q(title__icontains=value) | Q(synopsis__icontains=value)
+        )
 
     def filter_genre__title(
             self, queryset: QuerySet[Movie], name: str, value: str
