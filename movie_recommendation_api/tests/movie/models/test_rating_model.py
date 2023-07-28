@@ -1,8 +1,9 @@
 import pytest
 
 from django.core.exceptions import ValidationError
+from django.db.models.aggregates import Avg
 
-from movie_recommendation_api.movie.models import Rating
+from movie_recommendation_api.movie.models import Movie, Rating
 
 
 pytestmark = pytest.mark.django_db
@@ -99,20 +100,35 @@ def test_create_rating_for_movies_successful(
         rating=7.0
     )
 
+    # Calculate the expected average rating for the first test movie
     expected_average_for_first_movie = (
        first_rate_for_first_movie.rating + second_rate_for_first_movie.rating
                        ) / 2
-    assert first_test_movie.average_rating == expected_average_for_first_movie
 
-    test_first_movie_ratings_count = first_test_movie.ratings.count()
+    # Get the queryset for movies with annotating average ratings
+    test_movies_queryset = Movie.objects \
+        .prefetch_related('genre') \
+        .defer('cast_crew', 'runtime', 'release_date', 'created_at', 'updated_at')
+    test_movies_queryset = test_movies_queryset\
+        .annotate(avg_rating=Avg('movie_ratings__rating'))
+
+    # Verify the average rating and count of ratings for the first test movie
+    first_test_movie_rate = test_movies_queryset\
+        .get(title=first_test_movie.title).avg_rating
+    assert first_test_movie_rate == expected_average_for_first_movie
+
+    test_first_movie_ratings_count = first_test_movie.movie_ratings.all().count()
     assert test_first_movie_ratings_count == len(
         [first_rate_for_first_movie, second_rate_for_first_movie]
     )
 
+    # Verify the average rating and count of ratings for the second test movie
     expected_average_for_second_movie = first_rate_for_second_movie.rating
-    assert second_test_movie.average_rating == expected_average_for_second_movie
+    second_test_movie_rate = test_movies_queryset\
+        .get(title=second_test_movie.title).avg_rating
+    assert second_test_movie_rate == expected_average_for_second_movie
 
-    test_second_movie_ratings_count = second_test_movie.ratings.count()
+    test_second_movie_ratings_count = second_test_movie.movie_ratings.all().count()
     assert test_second_movie_ratings_count == len([first_rate_for_second_movie])
 
 
