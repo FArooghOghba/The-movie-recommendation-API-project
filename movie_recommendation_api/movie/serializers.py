@@ -9,6 +9,9 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
     """
     Serializer for representing the output of a Movie object.
 
+    This serializer includes fields for the title, poster, genre, average rating,
+    movie detail URL, and synopsis snippet of a Movie object.
+
     Fields:
         title (str): The title of the movie.
         poster (ImageField): The image field for the movie's poster.
@@ -21,8 +24,11 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
         get_movie_detail_url(self, movie): Returns the URL of
                                            the movie's detail view.
     """
+
+    # Use the avg_rating annotation added by the get_movie_list function as
+    # the source for the rate field
     rate = serializers.DecimalField(
-        max_digits=3, decimal_places=1, source='average_rating'
+        max_digits=3, decimal_places=1, source='avg_rating'
     )
     synopsis_snippet = serializers.CharField(source='get_snippet')
     movie_detail_url = serializers.SerializerMethodField(
@@ -32,7 +38,7 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = [
-            'id', 'title', 'poster', 'genre',
+            'id', 'title', 'poster', 'trailer', 'genre',
             'rate', 'movie_detail_url', 'synopsis_snippet'
         ]
 

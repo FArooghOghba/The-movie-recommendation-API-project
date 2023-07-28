@@ -1,10 +1,12 @@
 import pytest
+from django.db.models.aggregates import Avg
 
 from django.urls import reverse
 
 from rest_framework import status
 
 from movie_recommendation_api.movie.models import Movie
+from movie_recommendation_api.movie.selectors import get_movie_list
 from movie_recommendation_api.movie.serializers import (
     MovieDetailOutPutModelSerializer, MovieOutPutModelSerializer
 )
@@ -69,9 +71,13 @@ def test_get_five_movies_should_return_success(
     response = api_client.get(path=MOVIE_LIST_URL, request=request)
     assert response.status_code == status.HTTP_200_OK
 
-    test_movies = Movie.objects.all()
+    # Get the queryset for all movies, prefetching related genres,
+    # and deferring unnecessary fields.
+    # Annotate the queryset with average ratings and order it by 'id'
+    test_movies_queryset = get_movie_list().order_by('id')
+
     test_movies_output_serializer = MovieOutPutModelSerializer(
-        test_movies, many=True, context={'request': request}
+        test_movies_queryset, many=True, context={'request': request}
     )
     assert response.data['results'] == test_movies_output_serializer.data
 
@@ -91,6 +97,9 @@ def test_get_movie_detail_should_success(api_client, first_test_movie) -> None:
     url = movie_detail_url(movie_slug=first_test_movie.slug)
     response = api_client.get(path=url)
 
+    first_test_movie.avg_rating = first_test_movie.movie_ratings.aggregate(
+        avg_rating=Avg('rating')
+    )['avg_rating']
     test_movie_output_serializer = MovieDetailOutPutModelSerializer(first_test_movie)
 
     assert response.status_code == status.HTTP_200_OK

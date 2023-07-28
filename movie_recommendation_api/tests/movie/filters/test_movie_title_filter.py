@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from movie_recommendation_api.movie.models import Movie
+from movie_recommendation_api.movie.selectors import get_movie_list
 from movie_recommendation_api.movie.serializers import MovieOutPutModelSerializer
 
 pytestmark = pytest.mark.django_db
@@ -146,7 +146,12 @@ def test_get_movie_by_filter_case_insensitive_title(
     )
     assert response.status_code == status.HTTP_200_OK
 
-    filtered_movies = Movie.objects.filter(title=first_test_movie_title)
+    # Get the queryset for all movies, prefetching related genres,
+    # and deferring unnecessary fields, and adding filters.
+    # Annotate the queryset with average ratings and order it by 'id'
+    filter_params = {'title': first_test_movie_title}
+    filtered_movies = get_movie_list(filters=filter_params)
+
     filtered_movies_output_serializer = MovieOutPutModelSerializer(
         filtered_movies, many=True, context={'request': request}
     )

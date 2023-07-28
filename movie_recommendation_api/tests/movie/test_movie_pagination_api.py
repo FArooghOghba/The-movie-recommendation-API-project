@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from movie_recommendation_api.movie.models import Movie
+from movie_recommendation_api.movie.selectors import get_movie_list
 from movie_recommendation_api.movie.serializers import MovieOutPutModelSerializer
 
 
@@ -54,9 +54,13 @@ def test_get_movie_list_for_checking_pagination(
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data['results']) == expected_count
 
-    test_movies = Movie.objects.all()
+    # Get the queryset for all movies, prefetching related genres,
+    # and deferring unnecessary fields.
+    # Annotate the queryset with average ratings and order it by 'id'
+    test_movies_queryset = get_movie_list().order_by('id')
+
     test_movies_output_serializer = MovieOutPutModelSerializer(
-        test_movies, many=True, context={'request': request}
+        test_movies_queryset, many=True, context={'request': request}
     )
 
     # Get the subset of movies based on the limit and offset from the serialized data
@@ -174,6 +178,11 @@ def test_get_movie_list_pagination_next_previous_pages_request(
 
     assert response.status_code == status.HTTP_200_OK
 
+    # Get the queryset for all movies, prefetching related genres,
+    # and deferring unnecessary fields.
+    # Annotate the queryset with average ratings and order it by 'id'
+    test_movies_queryset = get_movie_list()
+
     # If there is a next page, assert the next page URL
     if test_next_page:
         next_page_url = response.data['next']
@@ -188,9 +197,8 @@ def test_get_movie_list_pagination_next_previous_pages_request(
         next_page_offset = next_page_response.data['offset']
         next_page_limit = next_page_response.data['limit']
 
-        test_movies = Movie.objects.all()
         test_movies_output_serializer = MovieOutPutModelSerializer(
-            test_movies, many=True, context={'request': request}
+            test_movies_queryset, many=True, context={'request': request}
         )
 
         # Get the expected results for the next page based on offset and limit
@@ -224,9 +232,8 @@ def test_get_movie_list_pagination_next_previous_pages_request(
         previous_page_offset = previous_page_response.data['offset']
         previous_page_limit = previous_page_response.data['limit']
 
-        test_movies = Movie.objects.all()
         test_movies_output_serializer = MovieOutPutModelSerializer(
-            test_movies, many=True, context={'request': request}
+            test_movies_queryset, many=True, context={'request': request}
         )
 
         # Get the expected results for the previous page based on offset and limit
