@@ -1,4 +1,4 @@
-from .base import *  # noqa
+from .base import *
 
 INSTALLED_APPS.append("debug_toolbar")
 MIDDLEWARE.insert(
