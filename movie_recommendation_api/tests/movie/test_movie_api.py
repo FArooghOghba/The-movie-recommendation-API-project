@@ -28,7 +28,7 @@ def movie_detail_url(movie_slug: str) -> str:
     :param movie_slug: The slug of the movie.
     :return: The URL for the movie detail API endpoint.
     """
-    return reverse('api:movie:detail', args=[movie_slug])
+    return reverse(viewname='api:movie:detail', args=[movie_slug])
 
 
 def test_get_zero_movie_should_return_empty_movie_list(api_client) -> None:
@@ -121,3 +121,87 @@ def test_get_nonexistent_movie_detail_should_return_error(api_client) -> None:
     response = api_client.get(path=url)
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_post_rate_to_movie_should_success(
+    api_client, first_test_movie, first_test_user
+) -> None:
+    """
+    Test that a user can successfully rate a movie through the API.
+
+    This test ensures that an authorized user can post a valid rating for a movie.
+    The user's authentication is forced using the 'api_client.force_authenticate()'
+    method, and the 'api_client.post()' method is used to post the rating.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_movie: A fixture providing the first test movie object.
+    :param first_test_user: A fixture providing the first test user object.
+    :return: None
+    """
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    payload = {'rate': 7}
+
+    response = api_client.post(path=url, data=payload)
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_post_rate_to_movie_with_unauthorized_user_should_error(
+    api_client, first_test_movie
+) -> None:
+    """
+    Test that an unauthorized user cannot rate a movie and receives an error.
+
+    This test verifies that an unauthenticated user receives
+    a 401 Unauthorized status when trying to post a rating for a movie.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_movie: A fixture providing the first test movie object.
+    :return: None
+    """
+
+    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    payload = {'rate': 7}
+
+    response = api_client.post(path=url, data=payload)
+    print(response.content)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    'wrong_rate', (
+        'wrong rate',
+        5.5,
+        '',
+        ' ',
+    )
+)
+def test_post_rate_to_movie_with_wrong_data_should_error(
+    api_client, first_test_movie, first_test_user, wrong_rate
+) -> None:
+    """
+     Test that posting a rating with wrong data returns a 400 Bad Request error.
+
+    This parameterized test checks various cases where the provided rate data
+    is invalid, such as wrong rate format, non-integer rate, empty string,
+    or whitespace.
+
+    The test ensures that the API returns a 400 Bad Request status for each
+    nvalid case.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_movie: A fixture providing the first test movie object.
+    :param first_test_user: A fixture providing the first test user object.
+    :param wrong_rate: A parameter representing invalid rate values.
+    :return: None
+    """
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    payload = {'rate': wrong_rate}
+
+    response = api_client.post(path=url, data=payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
