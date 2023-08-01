@@ -9,14 +9,15 @@ from drf_spectacular.views import (
 )
 
 urlpatterns = [
-    path("schema/", SpectacularAPIView.as_view(api_version="v1"), name="schema"),
-    path("", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
-    path("redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-    path('admin/', admin.site.urls),
-    path('api/', include(('movie_recommendation_api.api.urls', 'api'))),
+    path(route="schema/", view=SpectacularAPIView.as_view(api_version="v1"), name="schema"),
+    path(route="", view=SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path(route="redoc/", view=SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path(route='admin/', view=admin.site.urls),
+    path(route='api/', view=include(('movie_recommendation_api.api.urls', 'api'))),
 ]
 
 
 if settings.DEBUG:
-    urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))
+    urlpatterns.append(path(route="__debug__/", view=include("debug_toolbar.urls")))
+    urlpatterns.append(path(route='api-auth/', view=include('rest_framework.urls')))
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
