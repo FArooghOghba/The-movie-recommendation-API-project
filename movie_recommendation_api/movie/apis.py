@@ -4,11 +4,13 @@ from rest_framework import status
 
 from drf_spectacular.utils import extend_schema
 
+from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.movie.serializers import (
-    MovieDetailOutPutModelSerializer, MovieOutPutModelSerializer,
-    MovieFilterSerializer,
+    MovieFilterSerializer, MovieOutPutModelSerializer,
+    MovieDetailOutPutModelSerializer, MovieDetailInPutSerializer
 )
 from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_list
+from movie_recommendation_api.movie.services import rate_movie
 from movie_recommendation_api.api.pagination import (
     CustomLimitOffsetPagination, get_paginated_response_context
 )
@@ -77,26 +79,21 @@ class MovieAPIView(APIView):
         )
 
 
-class MovieDetailAPIView(APIView):
+class MovieDetailAPIView(ApiAuthMixin, APIView):
     """
     API view for retrieving a movie detail.
 
     Output Serializer:
         MovieDetailOutPutModelSerializer: Serializer for the detailed
                                           representation of a movie.
-
-    Pagination:
-        CustomLimitOffsetPagination: Custom pagination class for movie detail.
-
     Methods:
         get(self, request, movie_slug): Retrieves the detail of a movie
                                         based on the provided movie slug.
-
+        post(self, request, movie_slug): POST method for creating a movie rating.
     """
-    output_serializer = MovieDetailOutPutModelSerializer
 
-    class Pagination(CustomLimitOffsetPagination):
-        default_limit = 10
+    movie_input_serializer = MovieDetailInPutSerializer
+    movie_output_serializer = MovieDetailOutPutModelSerializer
 
     @extend_schema(
         responses=MovieDetailOutPutModelSerializer,
@@ -120,6 +117,51 @@ class MovieDetailAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = self.output_serializer(movie_query)
+        output_serializer = self.movie_output_serializer(movie_query)
 
-        return Response(serializer.data)
+        return Response(output_serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=MovieDetailInPutSerializer,
+        responses=MovieOutPutModelSerializer
+    )
+    def post(self, request, movie_slug):
+        """
+        POST method for creating a movie rating.
+
+        This method allows users to rate a movie by sending a POST request with the
+        'rate' field in the request body. The 'rate' field should be a valid integer
+        from 1 to 10.
+
+        Raises:
+            ValidationError: If the input data is not valid.
+            Authorization: If the user does not authorized.
+
+        :param request: (HttpRequest): The request object containing the rating data.
+        :param movie_slug: (str): The slug of the movie for which the rating
+                is being added.
+        :return: Response: A response containing the detailed representation
+                of the rated movie, including the newly added rating.
+        """
+
+        input_serializer = self.movie_input_serializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        try:
+            user = request.user
+            rate = input_serializer.validated_data.get('rate')
+            rate_movie(
+                user=user, movie_slug=movie_slug, rate=rate
+            )
+
+            rated_movie = get_movie_detail(slug=movie_slug)
+        except Exception as ex:
+            return Response(
+                data=f"Authorization Error - {ex}",
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        output_serializer = self.movie_output_serializer(
+            rated_movie, context={'request': request}
+        )
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)

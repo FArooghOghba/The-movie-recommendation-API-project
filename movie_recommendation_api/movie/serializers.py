@@ -51,8 +51,29 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
         """
 
         request = self.context.get("request")
-        path = reverse("api:movie:detail", args=(movie.slug,))
+        path = reverse(viewname="api:movie:detail", args=(movie.slug,))
         return request.build_absolute_uri(path)
+
+
+class MovieDetailInPutSerializer(serializers.Serializer):
+    """
+    Serializer for validating and deserializing the input data for rating a movie.
+
+    This serializer defines the input fields required for rating a movie, including
+    the 'rate' field. The 'rate' field should be a valid integer from 1 to 10,
+    representing the user's rating for the movie.
+
+    Fields:
+        rate (serializers.ChoiceField): The field for the user's rating of the movie.
+
+    Attributes:
+        rate_choices (set): A set of valid choices for the 'rate' field.
+                            Users can choose a rating value from 1 to 10.
+    """
+
+    rate_choices = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+    rate = serializers.ChoiceField(choices=rate_choices)
 
 
 class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
@@ -71,7 +92,7 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
     """
     class Meta(MovieOutPutModelSerializer.Meta):
         fields = [
-            'title', 'poster', 'genre', 'rate', 'cast_crew',
+            'id', 'title', 'poster', 'genre', 'rate', 'cast_crew',
             'synopsis', 'trailer', 'runtime', 'release_date'
         ]
 
