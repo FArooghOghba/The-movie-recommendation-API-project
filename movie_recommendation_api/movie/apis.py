@@ -110,7 +110,7 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
         """
 
         try:
-            movie_query = get_movie_detail(slug=movie_slug)
+            movie_query = get_movie_detail(movie_slug=movie_slug)
         except Exception as ex:
             return Response(
                 {"detail": "Filter Error - " + str(ex)},
@@ -154,7 +154,7 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
                 user=user, movie_slug=movie_slug, rate=rate
             )
 
-            rated_movie = get_movie_detail(slug=movie_slug)
+            rated_movie = get_movie_detail(movie_slug=movie_slug)
         except Exception as ex:
             return Response(
                 data=f"Authorization Error - {ex}",

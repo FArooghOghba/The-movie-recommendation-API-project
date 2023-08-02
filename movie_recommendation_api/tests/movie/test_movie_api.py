@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 from django.db.models.aggregates import Avg
 
 from django.urls import reverse
@@ -6,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from movie_recommendation_api.movie.models import Movie
-from movie_recommendation_api.movie.selectors import get_movie_list
+from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_list
 from movie_recommendation_api.movie.serializers import (
     MovieDetailOutPutModelSerializer, MovieOutPutModelSerializer
 )
@@ -97,10 +98,8 @@ def test_get_movie_detail_should_success(api_client, first_test_movie) -> None:
     url = movie_detail_url(movie_slug=first_test_movie.slug)
     response = api_client.get(path=url)
 
-    first_test_movie.avg_rating = first_test_movie.movie_ratings.aggregate(
-        avg_rating=Avg('rating')
-    )['avg_rating']
-    test_movie_output_serializer = MovieDetailOutPutModelSerializer(first_test_movie)
+    test_movie = get_movie_detail(movie_slug=first_test_movie.slug)
+    test_movie_output_serializer = MovieDetailOutPutModelSerializer(test_movie)
 
     assert response.status_code == status.HTTP_200_OK
     assert response.data == test_movie_output_serializer.data
@@ -124,7 +123,8 @@ def test_get_nonexistent_movie_detail_should_return_error(api_client) -> None:
 
 
 def test_post_rate_to_movie_should_success(
-    api_client, first_test_movie, first_test_user
+    api_client, first_test_movie, first_test_rating,
+    first_test_user, second_test_user
 ) -> None:
     """
     Test that a user can successfully rate a movie through the API.
@@ -132,20 +132,38 @@ def test_post_rate_to_movie_should_success(
     This test ensures that an authorized user can post a valid rating for a movie.
     The user's authentication is forced using the 'api_client.force_authenticate()'
     method, and the 'api_client.post()' method is used to post the rating.
+    and that the average rating is calculated correctly for the movie.
 
     :param api_client: An instance of the Django REST Framework's APIClient.
     :param first_test_movie: A fixture providing the first test movie object.
+    :param first_test_rating: A fixture providing the first test rating object.
+    :param second_test_user: A fixture providing the second test user object.
     :param first_test_user: A fixture providing the first test user object.
     :return: None
     """
 
-    api_client.force_authenticate(user=first_test_user)
+    # Set up: Assign the first test rating to the first test movie
+    first_test_rating.user = first_test_user
+    first_test_rating.movie = first_test_movie
+    first_test_rating.save()
+
+    # Authenticate the second test user for the API call
+    api_client.force_authenticate(user=second_test_user)
 
     url = movie_detail_url(movie_slug=first_test_movie.slug)
     payload = {'rate': 7}
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_201_CREATED
+
+    # Assertion: Check that the new rating is successfully added to the movie
+    first_test_movie_ratings_count = len(first_test_movie.movie_ratings.all())
+    assert first_test_movie_ratings_count == 2
+
+    # Assertion: Check that the average rating is calculated correctly for the movie
+    first_test_rating, second_test_rating = first_test_movie.movie_ratings.all()
+    first_test_movie_expected_rate = (first_test_rating.rating + second_test_rating.rating) / 2
+    assert Decimal(response.data['rate']) == first_test_movie_expected_rate
 
 
 def test_post_rate_to_movie_with_unauthorized_user_should_error(
@@ -205,3 +223,36 @@ def test_post_rate_to_movie_with_wrong_data_should_error(
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_get_movie_with_additional_items_should_success(
+    api_client, first_test_movie, first_test_user, second_test_user,
+    first_test_rating, second_test_rating
+) -> None:
+    """
+    """
+
+    first_test_rating.user = first_test_user
+    first_test_rating.movie = first_test_movie
+    first_test_rating.save()
+
+    second_test_rating.user = second_test_user
+    second_test_rating.movie = first_test_movie
+    second_test_rating.save()
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_detail_url(movie_slug=first_test_movie.slug)
+
+    response = api_client.post(path=url)
+    assert response.status_code == status.HTTP_200_OK
+
+    test_movie = get_movie_detail(movie_slug=first_test_movie.slug)
+    expected_rating = test_movie.avg_rating
+    assert response.data['results']['avg_rating'] == expected_rating
+
+    expected_rating_count = len([first_test_rating, second_test_rating])
+    assert response.data['results']['ratings_count'] == expected_rating_count
+
+    expected_logged_in_user_rating = first_test_rating.rating
+    assert response.data['results']['user_rating'] == expected_logged_in_user_rating

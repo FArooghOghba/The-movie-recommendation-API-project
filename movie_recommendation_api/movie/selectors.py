@@ -34,14 +34,19 @@ def get_movie_list(*, filters: Optional[dict] = None) -> QuerySet[Movie]:
     return movies_queryset
 
 
-def get_movie_detail(*, slug: str) -> Movie:
+def get_movie_detail(*, movie_slug: str) -> Movie:
     """
     Get a specific movie by its slug.
 
-    :param slug: (str): The slug of the movie.
+    :param movie_slug: (str): The slug of the movie.
     :return: Movie: The movie with the specified slug.
     """
-    movie = Movie.objects.get(slug=slug)
+    movie = (
+        Movie.objects
+        .prefetch_related('genre', 'cast_crew')
+        .get(slug=movie_slug)
+    )
+
     movie.avg_rating = movie.movie_ratings.aggregate(
         avg_rating=Avg('rating')
     )['avg_rating']
