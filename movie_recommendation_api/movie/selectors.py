@@ -1,9 +1,10 @@
 from typing import Optional
 
+from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from django.db.models.aggregates import Avg
 
-from movie_recommendation_api.movie.models import Movie
+from movie_recommendation_api.movie.models import Movie, Rating
 from movie_recommendation_api.movie.filters import MovieFilterSet
 
 
@@ -34,12 +35,17 @@ def get_movie_list(*, filters: Optional[dict] = None) -> QuerySet[Movie]:
     return movies_queryset
 
 
-def get_movie_detail(*, movie_slug: str) -> Movie:
+def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie:
     """
-    Get a specific movie by its slug.
+    Retrieve detailed information about a specific movie by its slug.
 
-    :param movie_slug: (str): The slug of the movie.
-    :return: Movie: The movie with the specified slug.
+    This function retrieves the detailed representation of a movie based on its slug.
+    It includes information such as the movie's genres, cast and crew members,
+    average rating, total number of ratings, and the user's rating if authenticated.
+
+    :param movie_slug: (str): The slug of the movie to retrieve.
+    :param user: (Optional) The authenticated user (if available).
+    :return: Movie: The detailed representation of the movie.
     """
     movie = (
         Movie.objects
@@ -47,8 +53,30 @@ def get_movie_detail(*, movie_slug: str) -> Movie:
         .get(slug=movie_slug)
     )
 
+    # Calculate the average rating for the movie
     movie.avg_rating = movie.movie_ratings.aggregate(
         avg_rating=Avg('rating')
     )['avg_rating']
+
+    # Annotate the count of ratings for the movie
+    movie.ratings_count = movie.movie_ratings.count()
+
+    # Check if the movie is released
+    # if movie.release_date and movie.release_date > date.today():
+    #     movie.not_released_yet = True
+    # else:
+    #     movie.not_released_yet = False
+
+    # If a user is authenticated, get their rating for the movie
+    if user and user.is_authenticated:
+        try:
+            user_rating = Rating.objects.get(user=user, movie=movie)
+            movie.user_rating = user_rating.rating
+        except Rating.DoesNotExist:
+            # If the user has not rated the movie yet, display a message
+            movie.user_rating = "You have not rated this movie yet."
+    else:
+        # If the user is not authenticated, display a message
+        movie.user_rating = "Please login to rate this movie."
 
     return movie

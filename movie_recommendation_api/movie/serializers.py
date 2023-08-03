@@ -71,9 +71,11 @@ class MovieDetailInPutSerializer(serializers.Serializer):
                             Users can choose a rating value from 1 to 10.
     """
 
-    rate_choices = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+    rate_choices = [(i, i) for i in range(1, 11)]
 
-    rate = serializers.ChoiceField(choices=rate_choices)
+    rate = serializers.ChoiceField(
+        choices=rate_choices, help_text="The user's rating for the movie (1 to 10)."
+    )
 
 
 class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
@@ -83,18 +85,41 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
     Inherits from MovieOutPutModelSerializer.
 
     Additional Fields:
-        cast_crew (ManyToManyField): The cast and crew members
-                  associated with the movie.
+        ratings_count (int): The total number of ratings for the movie.
+                        This field represents the count of ratings given by users.
+                        It is a non-negative integer value.
+        user_rating (int): The rating given by the authenticated user (if any).
+                        This field represents the rating given by the user who
+                        is currently authenticated and making the request. If the
+                        user has not rated the movie, it will be set to 0.
+                        It is an integer value between 0 and 10 (inclusive).
+
+    Fields:
+        id (int): The unique identifier for the movie.
+        title (str): The title of the movie.
+        poster (ImageField): The image field for the movie's poster.
+        genre (ManyToManyField): The genres associated with the movie.
+        rate (DecimalField): The average rating of the movie.
+        cast_crew (ManyToManyField): The cast and crew members associated
+                                     with the movie.
         synopsis (str): The synopsis of the movie.
         trailer (URLField): The URL of the movie's trailer.
         runtime (DurationField): The runtime of the movie.
         release_date (DateField): The release date of the movie.
     """
+
+    ratings_count = serializers.IntegerField(min_value=0)
+    user_rating = serializers.SerializerMethodField()
+
     class Meta(MovieOutPutModelSerializer.Meta):
         fields = [
-            'id', 'title', 'poster', 'genre', 'rate', 'cast_crew',
-            'synopsis', 'trailer', 'runtime', 'release_date'
+            'id', 'title', 'poster', 'genre', 'rate', 'ratings_count',
+            'user_rating', 'cast_crew', 'synopsis', 'trailer', 'runtime',
+            'release_date'
         ]
+
+    def get_user_rating(self, obj):
+        return self.context.get('user_rating')
 
 
 class MovieFilterSerializer(serializers.Serializer):

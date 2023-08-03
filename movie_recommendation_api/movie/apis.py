@@ -110,14 +110,20 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
         """
 
         try:
-            movie_query = get_movie_detail(movie_slug=movie_slug)
+            user = request.user
+            movie_query = get_movie_detail(movie_slug=movie_slug, user=user)
         except Exception as ex:
             return Response(
-                {"detail": "Filter Error - " + str(ex)},
+                data={"detail": "Filter Error - " + str(ex)},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        output_serializer = self.movie_output_serializer(movie_query)
+        # pass your_conditional_field to the serializer through
+        # the context parameter when instantiating output_serializer.
+        output_serializer = self.movie_output_serializer(
+            instance=movie_query,
+            context={'user_rating': getattr(movie_query, 'user_rating', None)}
+        )
 
         return Response(output_serializer.data, status=status.HTTP_200_OK)
 
@@ -154,7 +160,7 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
                 user=user, movie_slug=movie_slug, rate=rate
             )
 
-            rated_movie = get_movie_detail(movie_slug=movie_slug)
+            rated_movie = get_movie_detail(movie_slug=movie_slug, user=user)
         except Exception as ex:
             return Response(
                 data=f"Authorization Error - {ex}",
