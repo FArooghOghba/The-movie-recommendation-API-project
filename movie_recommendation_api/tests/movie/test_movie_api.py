@@ -128,6 +128,32 @@ def test_get_movie_detail_should_success(
     assert response.data['user_rating'] == expected_logged_in_user_rating
 
 
+def test_get_movie_detail_that_user_not_rated_should_success(
+    api_client, first_test_movie, first_test_user
+) -> None:
+    """
+    Test that a user can see the movie detail when they have not rated the movie yet.
+
+    This test ensures that an authorized user can successfully retrieve
+    the movie detail and if the user has not rated the movie,
+    the 'user_rating' field in the response will show the message:
+    'You have not rated this movie yet.'
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_movie: A fixture providing the first test movie object.
+    :param first_test_user: A fixture providing the first test user object.
+    :return: None
+    """
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    response = api_client.get(path=url)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['user_rating'] == 'You have not rated this movie yet.'
+
+
 def test_get_movie_detail_with_unauthenticated_user_should_success(
     api_client, first_test_movie
 ) -> None:
