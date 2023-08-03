@@ -147,11 +147,15 @@ def test_get_movie_detail_with_unauthenticated_user_should_success(
     response = api_client.get(path=url)
 
     test_movie = get_movie_detail(movie_slug=first_test_movie.slug)
-    test_movie_output_serializer = MovieDetailOutPutModelSerializer(test_movie)
+    test_movie_output_serializer = MovieDetailOutPutModelSerializer(
+            instance=test_movie,
+            context={'user_rating': getattr(test_movie, 'user_rating', None)}
+        )
 
     assert response.status_code == status.HTTP_200_OK
     assert response.data == test_movie_output_serializer.data
-    assert response.data['rate'] is None
+    assert response.data['ratings_count'] == 0
+    assert response.data['user_rating'] == 'Please login to rate this movie.'
 
 
 def test_get_nonexistent_movie_detail_should_return_error(api_client) -> None:
