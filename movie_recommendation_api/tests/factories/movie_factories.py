@@ -96,9 +96,7 @@ class RatingFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(BaseUserFactory)
     movie = factory.SubFactory(MovieFactory)
-    rating = factory.LazyFunction(lambda: fake.pydecimal(
-        left_digits=2, right_digits=1, positive=True, min_value=1, max_value=10
-    ))
+    rating = factory.LazyFunction(lambda: fake.pyint(min_value=1, max_value=10))
 
 
 class ReviewFactory(factory.django.DjangoModelFactory):
