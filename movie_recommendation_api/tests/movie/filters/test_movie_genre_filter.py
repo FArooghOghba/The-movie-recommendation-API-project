@@ -188,5 +188,5 @@ def test_get_movie_by_filter_genre_title_more_than_limit_should_return_error(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     # Check the error message in the response data
-    expected_error_message = "Filter Error - You cannot add more than 4 genres"
+    expected_error_message = ["Filter Error - You cannot add more than 4 genres"]
     assert response.data["detail"] == expected_error_message

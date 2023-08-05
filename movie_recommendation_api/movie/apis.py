@@ -4,6 +4,7 @@ from rest_framework import status
 
 from drf_spectacular.utils import extend_schema
 
+from movie_recommendation_api.api.exception_handlers import handle_exceptions
 from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.movie.serializers import (
     MovieFilterSerializer, MovieOutPutModelSerializer,
@@ -20,16 +21,22 @@ class MovieAPIView(APIView):
     """
     API view for retrieving a list of movies.
 
+    This view allows clients to retrieve a paginated
+    list of movies based on the provided filters.
+    The view uses the `MovieOutPutModelSerializer` to serialize
+    the output representation of movies and
+    the `CustomLimitOffsetPagination` class to paginate the results.
+
     Output Serializer:
         MovieOutPutModelSerializer: Serializer for the output
-                                    representation of movies.
+        representation of movies.
 
     Pagination:
-        CustomLimitOffsetPagination: Custom pagination class for movie list.
+        CustomLimitOffsetPagination: Custom pagination class for a movie list.
 
     Methods:
-        get(self, request): Retrieves a paginated list of movies based on
-                            the provided filters.
+        get(self, request): Retrieve a paginated list of movies based on
+        the provided filters.
 
     """
 
@@ -47,14 +54,26 @@ class MovieAPIView(APIView):
         """
         Retrieves a paginated list of movies based on the provided filters.
 
+        This method allows clients to retrieve a paginated list of movies
+        by sending a GET request to the movie list endpoint with optional
+        filter parameters. The filter parameters are validated using
+        the `MovieFilterSerializer` and passed to the `get_movie_list`
+        function to retrieve a queryset of movies matching the provided
+        filters. The results are then paginated using
+        the `CustomLimitOffsetPagination` class and serialized using
+        the `MovieOutPutModelSerializer`.
+
         Query Parameters:
             title (str): Filter movies by title.
             search (str): Search query to filter movies.
 
-        Raises:
-            ValidationError: If the filter parameters are invalid.
+
         :param request: The request object.
         :return: Paginated response containing the list of movies.
+
+        :raises ValidationError: If the filter parameters are invalid.
+        :raises LimitExceededException: If a filter parameter exceeds
+        its allowed limit.
         """
 
         filters_serializer = MovieFilterSerializer(data=request.query_params)
@@ -64,10 +83,13 @@ class MovieAPIView(APIView):
             movie_list_queryset = get_movie_list(
                 filters=filters_serializer.validated_data
             )
-        except Exception as ex:
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
             return Response(
-                {"detail": "Filter Error - " + str(ex)},
-                status=status.HTTP_400_BAD_REQUEST,
+                data=exception_response.data,
+                status=exception_response.status_code,
             )
 
         return get_paginated_response_context(
@@ -83,12 +105,23 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
     """
     API view for retrieving a movie detail.
 
+    This view allows clients to retrieve the detailed representation of a movie
+    and rate a movie by sending GET and POST requests to the movie detail endpoint.
+    The view uses the `MovieDetailOutPutModelSerializer` to serialize the output
+    representation of the movie and the `MovieDetailInPutSerializer` to validate
+    the input data for rating a movie.
+
     Output Serializer:
         MovieDetailOutPutModelSerializer: Serializer for the detailed
-                                          representation of a movie.
+        representation of a movie.
+
+    Input Serializer:
+        MovieDetailInPutSerializer: Serializer for validating the input
+        data for rating a movie.
+
     Methods:
         get(self, request, movie_slug): Retrieves the detail of a movie
-                                        based on the provided movie slug.
+        based on the provided movie slug.
         post(self, request, movie_slug): POST method for creating a movie rating.
     """
 
@@ -102,23 +135,33 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
         """
         Retrieves the detail of a movie based on the provided movie slug.
 
-        Raises:
-            DoesNotExist: If the movie does not exist.
+        This method allows clients to retrieve the detailed representation of a movie
+        by sending a GET request to the movie detail endpoint with the `movie_slug`
+        parameter. The method calls the `get_movie_detail` function with the provided
+        `movie_slug` and current user to retrieve the detailed representation of the
+        movie. The result is then serialized using
+        the `MovieDetailOutPutModelSerializer` and returned in the response.
+
         :param request: The request object.
         :param movie_slug: (str): The slug of the movie.
         :return: Response containing the detailed representation of the movie.
+
+        :raises DoesNotExist: If the movie does not exist.
         """
 
         try:
             user = request.user
             movie_query = get_movie_detail(movie_slug=movie_slug, user=user)
-        except Exception as ex:
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
             return Response(
-                data={"detail": "Filter Error - " + str(ex)},
-                status=status.HTTP_404_NOT_FOUND,
+                data=exception_response.data,
+                status=exception_response.status_code,
             )
 
-        # pass your_conditional_field to the serializer through
+        # pass 'user_rating' to the serializer through
         # the context parameter when instantiating output_serializer.
         output_serializer = self.movie_output_serializer(
             instance=movie_query,
@@ -137,17 +180,23 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
 
         This method allows users to rate a movie by sending a POST request with the
         'rate' field in the request body. The 'rate' field should be a valid integer
-        from 1 to 10.
+        from 1 to 10.The input data is validated using
+        the `MovieDetailInPutSerializer` and passed to the `rate_movie` function
+        to create a new rating for the specified movie. The method then calls
+        the `get_movie_detail` function to retrieve the updated detailed
+        representation of the rated movie, which is serialized using
+        the `MovieDetailOutPutModelSerializer` and returned in the response.
 
-        Raises:
-            ValidationError: If the input data is not valid.
-            Authorization: If the user does not authorized.
 
         :param request: (HttpRequest): The request object containing the rating data.
         :param movie_slug: (str): The slug of the movie for which the rating
                 is being added.
         :return: Response: A response containing the detailed representation
                 of the rated movie, including the newly added rating.
+
+        :raises ValidationError: If the input data is not valid.
+        :raises Authorization: If the user does not authorize.
+        :raises DoesNotExist: If the movie does not exist.
         """
 
         input_serializer = self.movie_input_serializer(data=request.data)
@@ -161,10 +210,13 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
             )
 
             rated_movie = get_movie_detail(movie_slug=movie_slug, user=user)
-        except Exception as ex:
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
             return Response(
-                data=f"Authorization Error - {ex}",
-                status=status.HTTP_401_UNAUTHORIZED
+                data=exception_response.data,
+                status=exception_response.status_code,
             )
 
         output_serializer = self.movie_output_serializer(
