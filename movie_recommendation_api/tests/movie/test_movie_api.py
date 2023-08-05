@@ -247,6 +247,38 @@ def test_post_rate_to_movie_should_success(
     assert response.data['rate'] == first_test_movie_expected_rate
 
 
+def test_post_rate_to_movie_does_not_exists_should_error(
+    api_client, first_test_user
+) -> None:
+
+    """
+    Test rating a movie that does not exist.
+
+    This test verifies that when the client attempts to rate a movie using a
+    not existed movie slug, the API responds with an 'HTTP 404 Not Found' error.
+
+    The test constructs a URL for the movie detail endpoint using a not existed movie
+    slug and sends a POST request to this URL with a valid payload containing
+    the rating data. The test expects the API to respond with an HTTP 404 status code
+    indicating that the movie with the specified slug was not found.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_user: A fixture that creates the first test user
+    in the database.
+    :return: None
+    """
+
+    api_client.force_authenticate(user=first_test_user)
+
+    not_exists_movie_slug = 'not-exists-movie-slug'
+
+    url = movie_detail_url(movie_slug=not_exists_movie_slug)
+    payload = {'rate': 7}
+
+    response = api_client.post(path=url, data=payload)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_post_rate_to_movie_with_unauthorized_user_should_error(
     api_client, first_test_movie
 ) -> None:
@@ -265,7 +297,6 @@ def test_post_rate_to_movie_with_unauthorized_user_should_error(
     payload = {'rate': 7}
 
     response = api_client.post(path=url, data=payload)
-    print(response.content)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
