@@ -3,8 +3,7 @@ import django_filters as filters
 from django.db.models import Q, QuerySet
 # from django.utils import timezone
 
-from rest_framework.exceptions import APIException
-
+from movie_recommendation_api.core.exceptions import LimitExceededException
 from movie_recommendation_api.movie.models import Movie
 
 
@@ -63,12 +62,17 @@ class MovieFilterSet(filters.FilterSet):
         The genre__title filter allows filtering movies based on
         comma-separated genre titles. It accepts a list of genre
         titles and returns movies that have any of the specified genres.
+        If the limit is exceeded, the method raises a `LimitExceededException`
+        with an appropriate error message. Otherwise, it filters the `queryset`
+        by checking if each movie has any of the specified genres and returns the
+        filtered queryset.
 
         :param queryset: The movie queryset to be filtered.
         :param name: The name of the field to be filtered.
         :param value: The genre titles to filter movies by (comma-separated).
         :return: queryset: The filtered movie queryset.
-        :raises: APIException: If the number of genres provided exceeds
+
+        :raises LimitExceededException: If the number of genres provided exceeds
         the maximum allowed limit.
         """
 
@@ -76,7 +80,7 @@ class MovieFilterSet(filters.FilterSet):
         genres = value.split(",")
 
         if len(genres) > limit:
-            raise APIException(f"You cannot add more than {limit} genres")
+            raise LimitExceededException(f"You cannot add more than {limit} genres")
         for genre in genres:
             queryset = queryset.filter(genre__title__icontains=genre.strip())
 
