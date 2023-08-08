@@ -81,6 +81,38 @@ def test_get_five_movies_should_return_success(
     assert response.data['results'] == test_movies_output_serializer.data
 
 
+def test_get_movies_with_genres_title_should_return_success(
+        api_client, first_test_movie, second_test_movie, third_test_movie
+) -> None:
+
+    """
+    Test retrieving a list of movies with associated genres.
+
+    This test verifies that the API successfully returns a list of movies with their
+    corresponding genre titles. It creates multiple movies with various genres using
+    the 'test_movies' fixture. The test then makes a GET request to the movie list
+    endpoint and checks if the genres in the response match the expected genres for
+    each movie.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_movie: A fixture providing the first test movie object.
+    :param second_test_movie: A fixture providing the second test movie object.
+    :param third_test_movie: A fixture providing the third test movie object.
+    :return: None
+    """
+
+    response = api_client.get(path=MOVIE_LIST_URL)
+    assert response.status_code == status.HTTP_200_OK
+
+    test_movies = (first_test_movie, second_test_movie, third_test_movie)
+
+    for index, test_movie in enumerate(test_movies):
+        genres = test_movie.genre.all()
+
+        movie_genres_response = response.data['results'][index]['genres']
+        assert movie_genres_response == [genre.title for genre in genres]
+
+
 def test_get_movie_detail_should_success(
     api_client, first_test_movie, first_test_user, second_test_user,
     first_test_rating, second_test_rating
