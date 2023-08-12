@@ -160,6 +160,57 @@ def test_get_movie_detail_should_success(
     assert response.data['user_rating'] == expected_logged_in_user_rating
 
 
+def test_get_movie_detail_with_cast_crew_role_should_return_success(
+        api_client, test_movie_without_cast_crew, second_test_movie, third_test_movie,
+        first_test_cast, first_test_crew
+) -> None:
+
+    """
+    Test the detailed movie retrieval API endpoint with cast and crew roles.
+
+    This test verifies that the detailed movie retrieval API endpoint returns
+    accurate and consistent information about the movie's cast and crew roles.
+
+    :param api_client: A DRF API client instance.
+    :param test_movie_without_cast_crew (Movie): A test movie object without cast and crew roles.
+    :param second_test_movie (Movie): Another test movie object created using fixtures.
+    :param third_test_movie (Movie): Yet another test movie object created using fixtures.
+    :param first_test_cast (CastCrew): A test cast member.
+    :param first_test_crew (CastCrew): A test crew member.
+    :return: None
+    """
+
+    a_test_movie = test_movie_without_cast_crew
+    a_test_movie.cast_crew.add(first_test_cast, first_test_crew)
+    a_test_movie.save()
+
+    url = movie_detail_url(movie_slug=a_test_movie.slug)
+
+    response = api_client.get(path=url)
+    assert response.status_code == status.HTTP_200_OK
+
+    test_movie = get_movie_detail(movie_slug=a_test_movie.slug)
+    test_movie_output_serializer = MovieDetailOutPutModelSerializer(
+        instance=test_movie,
+        context={'user_rating': getattr(test_movie, 'user_rating', None)}
+    )
+
+    response_cast_crews = response.data['cast_crews']
+    test_movie_cast_crews = test_movie_output_serializer.data['cast_crews']
+    assert response_cast_crews == test_movie_cast_crews
+
+    response_cast_len = len(response_cast_crews['casts'])
+    assert response_cast_len == 1
+
+    response_cast_name = response_cast_crews['casts'][0]['name']
+    test_movie_cast_name = test_movie_cast_crews['casts'][0]['name']
+    assert response_cast_name == test_movie_cast_name
+
+    response_cast_role = response_cast_crews['casts'][0]['role']
+    test_movie_cast_role = test_movie_cast_crews['casts'][0]['role']
+    assert response_cast_role == test_movie_cast_role
+
+
 def test_get_movie_detail_that_user_not_rated_should_success(
     api_client, first_test_movie, first_test_user
 ) -> None:

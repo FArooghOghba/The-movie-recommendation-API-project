@@ -134,7 +134,6 @@ class Movie(BaseModel):
     genre = models.ManyToManyField(to=Genre, related_name='movies')
     cast_crew = models.ManyToManyField(
         CastCrew,
-        related_name='casts_crews',
         through='role'
     )
     synopsis = models.TextField()

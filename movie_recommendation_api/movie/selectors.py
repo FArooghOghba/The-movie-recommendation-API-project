@@ -1,10 +1,10 @@
 from typing import Optional
 
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet
+from django.db.models import Prefetch, QuerySet
 from django.db.models.aggregates import Avg
 
-from movie_recommendation_api.movie.models import Movie, Rating
+from movie_recommendation_api.movie.models import Movie, Rating, Role
 from movie_recommendation_api.movie.filters import MovieFilterSet
 
 
@@ -47,9 +47,20 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
     :param user: (Optional) The authenticated user (if available).
     :return: Movie: The detailed representation of the movie.
     """
+
+    # Create a Prefetch object that fetches roles for a specific movie
+    cast_crew = Prefetch(
+        lookup='cast_crew',
+        queryset=Role.objects
+        .filter(movie__slug=movie_slug)
+        .select_related('cast_crew'),
+        to_attr='cast_crew_roles'
+    )
+
+    # Fetch the movie with the associated genres, cast_crews, and their roles
     movie = (
         Movie.objects
-        .prefetch_related('genre', 'cast_crew')
+        .prefetch_related('genre', cast_crew)
         .get(slug=movie_slug)
     )
 

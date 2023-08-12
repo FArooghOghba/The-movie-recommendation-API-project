@@ -88,6 +88,22 @@ def third_test_movie(
 
 
 @pytest.fixture
+def test_movie_without_cast_crew() -> MovieFactory:
+    """
+    Fixture that creates a test movies.
+
+    This fixture uses the MovieFactory to create a test movie
+    and returns the created movie. The test movie can be used in tests that
+    require a movie objects.
+
+    :return: A test movie objects.
+    """
+
+    test_movie = MovieFactory.create()
+    return test_movie
+
+
+@pytest.fixture
 def five_test_movies() -> QuerySet[MovieFactory]:
     """
     Fixture that creates a batch of five test movies.

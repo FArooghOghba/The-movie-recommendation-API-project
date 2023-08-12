@@ -113,7 +113,7 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
         genres (list): The list of genre titles associated with the movie.
         rate (DecimalField): The average rating of the movie.
         cast_crew (ManyToManyField): The cast and crew members associated
-                                     with the movie.
+        with the movie.
         synopsis (str): The synopsis of the movie.
         trailer (URLField): The URL of the movie's trailer.
         runtime (DurationField): The runtime of the movie.
@@ -122,16 +122,57 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
 
     ratings_count = serializers.IntegerField(min_value=0)
     user_rating = serializers.SerializerMethodField()
+    cast_crews = serializers.SerializerMethodField()
 
     class Meta(MovieOutPutModelSerializer.Meta):
         fields = [
             'id', 'title', 'poster', 'genres', 'rate', 'ratings_count',
-            'user_rating', 'cast_crew', 'synopsis', 'trailer', 'runtime',
+            'user_rating', 'cast_crews', 'synopsis', 'trailer', 'runtime',
             'release_date'
         ]
 
-    def get_user_rating(self, obj):
+    def get_user_rating(self, obj: Movie) -> int:
+        """
+        Retrieve the user's rating for the movie.
+
+        :param obj: obj (Movie): The movie object.
+        :return: int: The user's rating for the movie.
+        """
+
         return self.context.get('user_rating')
+
+    def get_cast_crews(self, obj: Movie) -> dict:
+        """
+        Retrieve the cast and crew members associated with the movie.
+
+        :param obj: (Movie): The movie object.
+        :return: dict: A dictionary containing 'casts' and 'crews' lists,
+        each containing person's information.
+        """
+
+        crew_role_names = ('Director', 'Writer', 'Producer', 'Music')
+
+        casts = []
+        crews = []
+
+        movie_roles = obj.cast_crew_roles
+
+        for role in movie_roles:
+
+            person_info = {
+                'name': role.cast_crew.name,
+                'image': role.cast_crew.image.url,
+                'career': role.cast_crew.career,
+                'role': role.name,
+            }
+
+            if role.cast_crew.cast is True and role.name.capitalize() not in crew_role_names:
+                casts.append(person_info)
+            if role.cast_crew.crew is True and role.name.capitalize() in crew_role_names:
+                person_info['career'] = role.name.capitalize()
+                crews.append(person_info)
+
+        return {'casts': casts, 'crews': crews}
 
 
 class MovieFilterSerializer(serializers.Serializer):
