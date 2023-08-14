@@ -1,3 +1,5 @@
+from typing import Any, Sequence
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,11 +8,15 @@ from drf_spectacular.utils import extend_schema
 
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
 from movie_recommendation_api.api.mixins import ApiAuthMixin
+from movie_recommendation_api.movie.models import Movie
+from movie_recommendation_api.movie.permissions import CanRateAfterReleaseDate
 from movie_recommendation_api.movie.serializers import (
     MovieFilterSerializer, MovieOutPutModelSerializer,
     MovieDetailOutPutModelSerializer, MovieDetailInPutSerializer
 )
-from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_list
+from movie_recommendation_api.movie.selectors import (
+    get_movie_obj, get_movie_detail, get_movie_list
+)
 from movie_recommendation_api.movie.services import rate_movie
 from movie_recommendation_api.api.pagination import (
     CustomLimitOffsetPagination, get_paginated_response_context
@@ -127,6 +133,36 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
 
     movie_input_serializer = MovieDetailInPutSerializer
     movie_output_serializer = MovieDetailOutPutModelSerializer
+
+    def get_object(self) -> Movie:
+        """
+        Retrieves the movie object based on the provided movie slug.
+
+        :return: The retrieved movie object.
+        """
+
+        movie_slug = self.kwargs.get('movie_slug')
+        movie = get_movie_obj(movie_slug=movie_slug)
+        return movie
+
+    def get_permissions(self) -> Sequence[Any] | Any:
+        """
+        Retrieves the permission classes for the current request.
+
+        This method overrides the default `get_permissions` method to add
+        custom permissions for the `post` method. If the current request method
+        is `POST`, it adds an instance of the `CanRateAfterReleaseDate` permission
+        class to the list of permission classes.
+
+        :return: A list of permission classes to be used for the current request.
+        """
+
+        permissions = super().get_permissions()
+
+        if self.request.method == 'POST':
+            return permissions + [CanRateAfterReleaseDate()]
+
+        return permissions
 
     @extend_schema(
         responses=MovieDetailOutPutModelSerializer,

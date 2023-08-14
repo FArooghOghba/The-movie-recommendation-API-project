@@ -1,19 +1,19 @@
 import pytest
 
+from datetime import timedelta
+
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework import status
 
-from movie_recommendation_api.movie.models import Movie
-from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_list
+from movie_recommendation_api.movie.selectors import get_movie_detail
 from movie_recommendation_api.movie.serializers import (
-    MovieDetailOutPutModelSerializer, MovieOutPutModelSerializer
+    MovieDetailOutPutModelSerializer
 )
 
 
 pytestmark = pytest.mark.django_db
-
-MOVIE_LIST_URL = reverse('api:movie:list')
 
 
 def movie_detail_url(movie_slug: str) -> str:
@@ -28,89 +28,6 @@ def movie_detail_url(movie_slug: str) -> str:
     :return: The URL for the movie detail API endpoint.
     """
     return reverse(viewname='api:movie:detail', args=[movie_slug])
-
-
-def test_get_zero_movie_should_return_empty_movie_list(api_client) -> None:
-    """
-    Test retrieving movie list when there are no movies available.
-
-    This test verifies that when there are no movies in the database,
-    the API returns an empty list of movies.
-
-    :param api_client: A fixture providing the Django test client for API requests.
-    :return: None
-    """
-
-    response = api_client.get(path=MOVIE_LIST_URL)
-    assert response.status_code == status.HTTP_200_OK
-
-    test_movies = Movie.objects.all()
-    test_movie_output_serializer = MovieOutPutModelSerializer(test_movies, many=True)
-    assert response.data['results'] == test_movie_output_serializer.data
-
-
-def test_get_five_movies_should_return_success(
-    api_client, api_request, five_test_movies
-) -> None:
-
-    """
-    Test retrieving a list of five movies successfully.
-
-    This test verifies that when there are five movies available in the database,
-    the API returns the list of movies with the expected data.
-
-    :param api_client: A fixture providing the Django test client for API requests.
-    :param api_request: A fixture providing the Django REST framework API request
-           factory.
-    :param five_test_movies: A fixture providing five test movie objects.
-    :return: None
-    """
-
-    request = api_request.get(path=MOVIE_LIST_URL)
-    response = api_client.get(path=MOVIE_LIST_URL, request=request)
-    assert response.status_code == status.HTTP_200_OK
-
-    # Get the queryset for all movies, prefetching related genres,
-    # and deferring unnecessary fields.
-    # Annotate the queryset with average ratings and order it by 'id'
-    test_movies_queryset = get_movie_list().order_by('id')
-
-    test_movies_output_serializer = MovieOutPutModelSerializer(
-        test_movies_queryset, many=True, context={'request': request}
-    )
-    assert response.data['results'] == test_movies_output_serializer.data
-
-
-def test_get_movies_with_genres_title_should_return_success(
-        api_client, first_test_movie, second_test_movie, third_test_movie
-) -> None:
-
-    """
-    Test retrieving a list of movies with associated genres.
-
-    This test verifies that the API successfully returns a list of movies with their
-    corresponding genre titles. It creates multiple movies with various genres using
-    the 'test_movies' fixture. The test then makes a GET request to the movie list
-    endpoint and checks if the genres in the response match the expected genres for
-    each movie.
-
-    :param api_client: An instance of the Django REST Framework's APIClient.
-    :param first_test_movie: A fixture providing the first test movie object.
-    :param second_test_movie: A fixture providing the second test movie object.
-    :param third_test_movie: A fixture providing the third test movie object.
-    :return: None
-    """
-
-    response = api_client.get(path=MOVIE_LIST_URL)
-    assert response.status_code == status.HTTP_200_OK
-
-    test_movies = (first_test_movie, second_test_movie, third_test_movie)
-
-    for index, test_movie in enumerate(test_movies):
-        genres = test_movie.genre.all()
-
-        movie_genres_response = response.data['results'][index]['genres']
-        assert movie_genres_response == [genre.title for genre in genres]
 
 
 def test_get_movie_detail_should_success(
@@ -161,8 +78,8 @@ def test_get_movie_detail_should_success(
 
 
 def test_get_movie_detail_with_cast_crew_role_should_return_success(
-        api_client, test_movie_without_cast_crew, second_test_movie, third_test_movie,
-        first_test_cast, first_test_crew
+        api_client, second_test_movie, third_test_movie,
+        test_movie_without_cast_crew, first_test_cast, first_test_crew
 ) -> None:
 
     """
@@ -172,9 +89,12 @@ def test_get_movie_detail_with_cast_crew_role_should_return_success(
     accurate and consistent information about the movie's cast and crew roles.
 
     :param api_client: A DRF API client instance.
-    :param test_movie_without_cast_crew (Movie): A test movie object without cast and crew roles.
-    :param second_test_movie (Movie): Another test movie object created using fixtures.
-    :param third_test_movie (Movie): Yet another test movie object created using fixtures.
+    :param test_movie_without_cast_crew (Movie): A test movie object
+    without cast and crew roles.
+    :param second_test_movie (Movie): Another test movie object created
+    using fixtures.
+    :param third_test_movie (Movie): Yet another test movie object created
+    using fixtures.
     :param first_test_cast (CastCrew): A test cast member.
     :param first_test_crew (CastCrew): A test crew member.
     :return: None
@@ -282,6 +202,38 @@ def test_get_nonexistent_movie_detail_should_return_error(api_client) -> None:
     response = api_client.get(path=url)
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_get_movie_that_not_released_yet(
+    api_client, first_test_movie, first_test_user
+) -> None:
+    """
+    Tests that getting a movie that has not been released yet returns
+    the expected response.
+
+    This test function creates a test movie with a release date in the future,
+    authenticates a test user, and sends a GET request to the movie detail
+    endpoint to retrieve the movie detail. It then asserts that the response
+    status code is 200 OK, and that the `user_rating` field in the response data
+    is set to "Movie has not been released yet."
+
+    :param api_client: The API client used to send requests to the API.
+    :param first_test_movie: The test movie object.
+    :param first_test_user: The test user object.
+    """
+
+    test_movie_release_date = timezone.now().date() + timedelta(days=1)
+
+    first_test_movie.release_date = test_movie_release_date
+    first_test_movie.save()
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    response = api_client.get(path=url)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['user_rating'] == 'Movie has not been released yet.'
 
 
 def test_post_rate_to_movie_should_success(
@@ -418,3 +370,38 @@ def test_post_rate_to_movie_with_wrong_data_should_error(
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_post_rate_to_movie_that_not_released_yet_should_error(
+    api_client, first_test_movie, first_test_user
+) -> None:
+
+    """
+    Tests that posting a rating to a movie that has not been released yet
+    returns an error.
+
+    This test function creates a test movie with a release date in the future,
+    authenticates a test user, and sends a POST request to the movie detail
+    endpoint to rate the movie. It then asserts that the response status code
+    is 403 Forbidden, indicating that the user is not allowed to rate the movie
+    because it has not been released yet.
+
+    :param api_client: The API client used to send requests to the API.
+    :param first_test_movie: The test movie object.
+    :param first_test_user: The test user object.
+    :return: None
+    """
+
+    test_movie_release_date = timezone.now().date() + timedelta(days=1)
+
+    first_test_movie.release_date = test_movie_release_date
+    first_test_movie.save()
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    payload = {'rate': 8}
+    print(first_test_movie.release_date)
+
+    response = api_client.post(path=url, data=payload)
+    assert response.status_code == status.HTTP_403_FORBIDDEN

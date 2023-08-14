@@ -1,5 +1,7 @@
 from typing import Optional
 
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.db.models import Prefetch, QuerySet
 from django.db.models.aggregates import Avg
@@ -73,13 +75,14 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
     movie.ratings_count = movie.movie_ratings.count()
 
     # Check if the movie is released
-    # if movie.release_date and movie.release_date > date.today():
-    #     movie.not_released_yet = True
-    # else:
-    #     movie.not_released_yet = False
+    release_date = movie.release_date
+    current_date = date.today()
+
+    if movie.release_date and current_date < release_date:
+        movie.user_rating = "Movie has not been released yet."
 
     # If a user is authenticated, get their rating for the movie
-    if user and user.is_authenticated:
+    elif user and user.is_authenticated:
         try:
             user_rating = Rating.objects.get(user=user, movie=movie)
             movie.user_rating = user_rating.rating
@@ -91,3 +94,18 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
         movie.user_rating = "Please login to rate this movie."
 
     return movie
+
+
+def get_movie_obj(*, movie_slug: str) -> Movie:
+    """
+    Retrieves a movie object based on the provided movie slug.
+
+    This function takes a movie slug as an input parameter and retrieves the
+    corresponding movie object from the database using the Django ORM.
+
+    :param movie_slug: The slug of the movie to retrieve.
+    :return: The retrieved movie object.
+    """
+
+    movie_obj = Movie.objects.get(slug=movie_slug)
+    return movie_obj
