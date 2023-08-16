@@ -69,7 +69,8 @@ class CastCrew(BaseModel):
    Attributes:
         name (str): The name of the cast or crew member.
         image (ImageField): The image field for the cast or crew member's image.
-        career (str): The career of the cast or crew member.
+        careers (ManyToManyField): The list of careers associated with
+        the cast or crew member.
         cast (bool): Indicates if the member is part of the cast.
         crew (bool): Indicates if the member is part of the crew.
 
@@ -79,21 +80,15 @@ class CastCrew(BaseModel):
         __str__(self): Returns a string representation of the genre.
    """
 
-    CAREER_CHOICES = [
-        ('Actor', 'Actor'),
-        ('Actress', 'Actress'),
-        ('Director', 'Director'),
-        ('Writer', 'Writer'),
-        ('Producer', 'Producer'),
-        ('Music', 'Music'),
-    ]
-
     name = models.CharField(max_length=255, unique=True)
     image = models.ImageField(
         upload_to=cast_crew_image_file_path,
         default='cast_crew_image/blank-profile-picture.png'
     )
-    career = models.CharField(max_length=10, choices=CAREER_CHOICES, default="Actor")
+    careers = models.ManyToManyField(
+        to='Career',
+        related_name='cast_crew_members',
+    )
     cast = models.BooleanField(default=False)
     crew = models.BooleanField(default=False)
 
@@ -102,6 +97,23 @@ class CastCrew(BaseModel):
 
     class Meta:
         ordering = ['name']
+
+
+class Career(models.Model):
+    """
+    Represents a career (role) of a cast/crew member.
+
+    Attributes:
+        name (str): The name of the career.
+
+    Methods:
+        __str__(self): Returns a string representation of the career.
+    """
+
+    name = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Movie(BaseModel):
@@ -229,6 +241,7 @@ class Role(BaseModel):
     Attributes:
         name (str): The name of the role.
         cast_crew (ForeignKey): The cast or crew member associated with the role.
+        careers (ManyToManyField): The list of careers associated with the role.
         movie (ForeignKey): The movie associated with the role.
     """
 
@@ -236,6 +249,10 @@ class Role(BaseModel):
     cast_crew = models.ForeignKey(
         to=CastCrew,
         on_delete=models.CASCADE,
+    )
+    careers = models.ManyToManyField(
+        to='Career',
+        related_name='roles',
     )
     movie = models.ForeignKey(
         to=Movie,

@@ -90,9 +90,20 @@ class CastCrewAdmin(admin.ModelAdmin):
     # autocomplete_fields = ['role']
     list_display = [
         'name',
-        'career',
     ]
     inlines = [RoleInline]
+
+
+@admin.register(models.Career)
+class CareersAdmin(admin.ModelAdmin):
+    """
+
+    """
+
+    search_fields = ['name']
+    list_display = [
+        'name'
+    ]
 
 
 @admin.register(models.Role)
