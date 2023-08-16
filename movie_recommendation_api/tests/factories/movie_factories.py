@@ -1,7 +1,7 @@
 import factory
 
 from movie_recommendation_api.movie.models import (
-    CastCrew, Genre, Movie, Rating, Review, Role,
+    Career, CastCrew, Genre, Movie, Rating, Review, Role,
     cast_crew_image_file_path, movie_poster_file_path
 )
 from movie_recommendation_api.tests.factories.user_factories import BaseUserFactory
@@ -18,6 +18,16 @@ class GenreFactory(factory.django.DjangoModelFactory):
     title = factory.LazyAttribute(lambda _: fake.word())
 
 
+class CareerFactory(factory.django.DjangoModelFactory):
+    """
+    Factory for creating instances of the Career model.
+    """
+    class Meta:
+        model = Career
+
+    name = factory.LazyAttribute(lambda _: fake.word())
+
+
 class CastCrewFactory(factory.django.DjangoModelFactory):
     """
     Factory for creating instances of the CastCrew model.
@@ -30,13 +40,18 @@ class CastCrewFactory(factory.django.DjangoModelFactory):
         upload_to=cast_crew_image_file_path,
         default='cast_crew_image/blank-profile-picture.png'
     )
-    career = factory.LazyAttribute(
-        lambda _: fake.random_element(
-            elements=('Actor', 'Actress', 'Director', 'Writer', 'Producer', 'Music')
-        )
-    )
+
     cast = factory.Faker('boolean')
     crew = factory.Faker('boolean')
+
+    @factory.post_generation
+    def careers(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for career in extracted:
+                self.careers.add(career)
 
 
 class MovieFactory(factory.django.DjangoModelFactory):
