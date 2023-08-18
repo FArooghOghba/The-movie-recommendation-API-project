@@ -130,9 +130,32 @@ class RoleFactory(factory.django.DjangoModelFactory):
     """
     Factory for creating instances of the Role model.
     """
+
     class Meta:
         model = Role
 
-    name = fake.job()
+    name = factory.LazyAttribute(lambda _: fake.job())
     cast_crew = factory.SubFactory(CastCrewFactory)
     movie = factory.SubFactory(MovieFactory)
+
+    @factory.post_generation
+    def careers(self, create, extracted, **kwargs):
+        """
+        Post-generation hook for adding careers to the Role instance.
+
+        :param create: Whether the Role instance was created or built.
+        :param extracted: The value passed to the 'careers' parameter
+         when calling the factory.
+        :param kwargs: Additional keyword arguments.
+        :return:
+        """
+        if not create:
+            # If the Role instance was not created, do nothing
+
+            return
+
+        if extracted:
+            # If careers were passed to the factory, add them to the Role instance
+
+            for career in extracted:
+                self.careers.add(career)
