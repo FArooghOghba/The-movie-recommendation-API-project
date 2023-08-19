@@ -39,7 +39,7 @@ def third_test_career_for_cast() -> CareerFactory:
 
     :return: Career: A test career object.
     """
-    return CareerFactory(name='Actress')
+    return CareerFactory(name='Voice')
 
 
 @pytest.fixture
