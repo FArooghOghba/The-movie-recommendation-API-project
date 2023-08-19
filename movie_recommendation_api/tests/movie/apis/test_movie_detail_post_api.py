@@ -7,11 +7,6 @@ from django.utils import timezone
 
 from rest_framework import status
 
-from movie_recommendation_api.movie.selectors import get_movie_detail
-from movie_recommendation_api.movie.serializers import (
-    MovieDetailOutPutModelSerializer
-)
-
 
 pytestmark = pytest.mark.django_db
 
@@ -31,8 +26,8 @@ def movie_detail_url(movie_slug: str) -> str:
 
 
 def test_post_rate_to_movie_should_success(
-    api_client, first_test_movie, first_test_rating,
-    first_test_user, second_test_user
+    test_movie_with_cast_crew_role_and_two_user_ratings, api_client,
+    test_movie_without_cast_crew, third_test_user
 ) -> None:
     """
     Test that a user can successfully rate a movie through the API.
@@ -43,37 +38,40 @@ def test_post_rate_to_movie_should_success(
     and that the average rating is calculated correctly for the movie.
 
     :param api_client: An instance of the Django REST Framework's APIClient.
-    :param first_test_movie: A fixture providing the first test movie object.
-    :param first_test_rating: A fixture providing the first test rating object.
-    :param second_test_user: A fixture providing the second test user object.
-    :param first_test_user: A fixture providing the first test user object.
+    :param test_movie_with_cast_crew_role_and_two_user_ratings: A fixture providing
+    a test movie object with cast, crew, role, and two user ratings.
+    :param test_movie_without_cast_crew: A fixture providing a test movie object
+    without cast and crew.
+    :param third_test_user: A fixture providing the third test user object.
     :return: None
     """
 
-    # Set up: Assign the first test rating to the first test movie
-    first_test_rating.user = first_test_user
-    first_test_rating.movie = first_test_movie
-    first_test_rating.save()
-
     # Authenticate the second test user for the API call
-    api_client.force_authenticate(user=second_test_user)
+    api_client.force_authenticate(user=third_test_user)
 
-    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    url = movie_detail_url(movie_slug=test_movie_without_cast_crew.slug)
     payload = {'rate': 7}
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_201_CREATED
 
     # Assertion: Check that the new rating is successfully added to the movie
-    first_test_movie_ratings_count = len(first_test_movie.movie_ratings.all())
-    assert first_test_movie_ratings_count == 2
+    first_test_movie_ratings_count = len(
+        test_movie_without_cast_crew.movie_ratings.all()
+    )
+    assert first_test_movie_ratings_count == 3
 
     # Assertion: Check that the average rating is calculated correctly for the movie
-    first_test_rating, second_test_rating = first_test_movie.movie_ratings.all()
+    (first_test_rating,
+     second_test_rating,
+     third_test_rating) = test_movie_without_cast_crew.movie_ratings.all()
+
     first_test_movie_expected_rate = (
-             first_test_rating.rating + second_test_rating.rating
-                                     ) / 2
-    assert response.data['rate'] == first_test_movie_expected_rate
+             first_test_rating.rating +
+             second_test_rating.rating +
+             third_test_rating.rating
+                                     ) / 3
+    assert response.data['rate'] == round(first_test_movie_expected_rate, 1)
 
 
 def test_post_rate_to_movie_does_not_exists_should_error(

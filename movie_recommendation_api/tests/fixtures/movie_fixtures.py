@@ -133,3 +133,88 @@ def three_test_movies() -> QuerySet[MovieFactory]:
 
     test_movies = MovieFactory.create_batch(3)
     yield test_movies
+
+
+@pytest.fixture
+def test_movie_with_cast_crew_role_and_two_user_ratings(
+        test_movie_without_cast_crew, first_test_user, second_test_user,
+        first_test_cast, first_test_crew, first_test_role, second_test_role,
+        first_test_rating, second_test_rating
+) -> None:
+
+    """
+    A fixture that creates a test movie with cast, crew, role, and two user ratings.
+
+    This fixture creates a test movie with cast, crew, role, and two user ratings.
+    It adds a rating for the first test user and the second test user to
+    the test movie.
+    It also creates a role for the cast member and the crew member in the test movie.
+
+    :param test_movie_without_cast_crew: A fixture providing a test movie object
+    without cast and crew roles.
+    :param first_test_user: A fixture providing the first test user object.
+    :param second_test_user: A fixture providing the second test user object.
+    :param first_test_cast: A fixture providing the first test cast object.
+    :param first_test_crew: A fixture providing the first test crew object.
+    :param first_test_role: A fixture providing the first test role object.
+    :param second_test_role: A fixture providing the second test role object.
+    :param first_test_rating: A fixture providing the first test rating object.
+    :param second_test_rating: A fixture providing the second test rating object.
+    :return: None
+    """
+
+    # creating rating for the first test user in a first test movie.
+    first_test_rating.user = first_test_user
+    first_test_rating.movie = test_movie_without_cast_crew
+    first_test_rating.save()
+
+    # creating rating for the second test user in a first test movie.
+    second_test_rating.user = second_test_user
+    second_test_rating.movie = test_movie_without_cast_crew
+    second_test_rating.save()
+
+    # creating a role for cast member in the first test movie.
+    first_test_role.movie = test_movie_without_cast_crew
+    first_test_role.cast_crew = first_test_cast
+    first_test_role.save()
+
+    # creating a role for crew member in the first test movie.
+    second_test_role.movie = test_movie_without_cast_crew
+    second_test_role.cast_crew = first_test_crew
+    second_test_role.save()
+
+    test_movie_without_cast_crew.cast_crew.add(first_test_cast, first_test_crew)
+
+
+@pytest.fixture
+def test_movie_with_cast_crew_role(
+    test_movie_without_cast_crew, first_test_role, second_test_role,
+    first_test_cast, first_test_crew
+) -> None:
+
+    """
+     A fixture that creates a test movie with cast, crew, and role.
+
+    This fixture creates a test movie with cast, crew, and role.
+    It creates a role for the cast member and the crew member in the test movie.
+
+    :param test_movie_without_cast_crew: A fixture providing a test movie
+    object without cast and crew roles.
+    :param first_test_cast: A fixture providing the first test cast object.
+    :param first_test_crew: A fixture providing the first test crew object.
+    :param first_test_role: A fixture providing the first test role object.
+    :param second_test_role: A fixture providing the second test role object.
+    :return: None
+    """
+
+    # creating a role for cast member in the first test movie.
+    first_test_role.movie = test_movie_without_cast_crew
+    first_test_role.cast_crew = first_test_cast
+    first_test_role.save()
+
+    # creating a role for crew member in the first test movie.
+    second_test_role.movie = test_movie_without_cast_crew
+    second_test_role.cast_crew = first_test_crew
+    second_test_role.save()
+
+    test_movie_without_cast_crew.cast_crew.add(first_test_crew, first_test_cast)
