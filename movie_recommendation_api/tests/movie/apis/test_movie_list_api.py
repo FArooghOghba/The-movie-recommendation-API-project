@@ -72,8 +72,8 @@ def test_get_five_movies_should_return_success(
 
     # Get the queryset for all movies, prefetching related genres,
     # and deferring unnecessary fields.
-    # Annotate the queryset with average ratings and order it by 'id'
-    test_movies_queryset = get_movie_list().order_by('id')
+    # Annotate the queryset with average ratings and order it by 'release_date'
+    test_movies_queryset = get_movie_list().order_by('release_date')
 
     test_movies_output_serializer = MovieOutPutModelSerializer(
         test_movies_queryset, many=True, context={'request': request}
@@ -104,10 +104,11 @@ def test_get_movies_with_genres_title_should_return_success(
     response = api_client.get(path=MOVIE_LIST_URL)
     assert response.status_code == status.HTTP_200_OK
 
-    test_movies = (first_test_movie, second_test_movie, third_test_movie)
+    test_movies = (third_test_movie, first_test_movie, second_test_movie)
 
     for index, test_movie in enumerate(test_movies):
         genres = test_movie.genre.all()
 
         movie_genres_response = response.data['results'][index]['genres']
+        print(movie_genres_response)
         assert movie_genres_response == [genre.title for genre in genres]

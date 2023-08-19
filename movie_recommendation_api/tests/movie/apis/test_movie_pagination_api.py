@@ -56,8 +56,8 @@ def test_get_movie_list_for_checking_pagination(
 
     # Get the queryset for all movies, prefetching related genres,
     # and deferring unnecessary fields.
-    # Annotate the queryset with average ratings and order it by 'id'
-    test_movies_queryset = get_movie_list().order_by('id')
+    # Annotate the queryset with average ratings and order it by 'release_date'
+    test_movies_queryset = get_movie_list().order_by('release_date')
 
     test_movies_output_serializer = MovieOutPutModelSerializer(
         test_movies_queryset, many=True, context={'request': request}
