@@ -110,5 +110,4 @@ def test_get_movies_with_genres_title_should_return_success(
         genres = test_movie.genre.all()
 
         movie_genres_response = response.data['results'][index]['genres']
-        print(movie_genres_response)
         assert movie_genres_response == [genre.title for genre in genres]

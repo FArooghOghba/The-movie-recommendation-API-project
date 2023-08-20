@@ -92,7 +92,6 @@ def test_get_movie_by_filter_partial_title_field(
     filter_params = {filtering_field: 'star'}
 
     response = api_client.get(path=MOVIE_LIST_URL, data=filter_params)
-    print(response.content)
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data['results']) == 2
     assert {result['title'] for result in response.data['results']} == {

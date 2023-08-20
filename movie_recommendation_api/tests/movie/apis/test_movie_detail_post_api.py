@@ -193,7 +193,6 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
 
     url = movie_detail_url(movie_slug=first_test_movie.slug)
     payload = {'rate': 8}
-    print(first_test_movie.release_date)
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_403_FORBIDDEN
