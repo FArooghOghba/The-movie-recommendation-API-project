@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.db.models import Prefetch, QuerySet
+from django.db.models import Count, Prefetch, QuerySet
 from django.db.models.aggregates import Avg
 
 from movie_recommendation_api.movie.models import Movie, Rating, Role
@@ -34,7 +34,7 @@ def get_movie_list(*, filters: Optional[dict] = None) -> QuerySet[Movie]:
     if filters:
         movies_queryset = MovieFilterSet(filters, movies_queryset).qs
 
-    return movies_queryset
+    return movies_queryset.order_by('-release_date')
 
 
 def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie:
@@ -55,7 +55,8 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
         lookup='cast_crew',
         queryset=Role.objects
         .filter(movie__slug=movie_slug)
-        .select_related('cast_crew'),
+        .select_related('cast_crew')
+        .prefetch_related('careers'),
         to_attr='cast_crew_roles'
     )
 
@@ -67,12 +68,14 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
     )
 
     # Calculate the average rating for the movie
-    movie.avg_rating = movie.movie_ratings.aggregate(
-        avg_rating=Avg('rating')
-    )['avg_rating']
+    # Annotates the count of ratings for the movie
+    ratings_data = movie.movie_ratings.aggregate(
+        avg_rating=Avg('rating'),
+        ratings_count=Count('id')
+    )
 
-    # Annotate the count of ratings for the movie
-    movie.ratings_count = movie.movie_ratings.count()
+    movie.avg_rating = ratings_data['avg_rating']
+    movie.ratings_count = ratings_data['ratings_count']
 
     # Check if the movie is released
     release_date = movie.release_date

@@ -150,8 +150,6 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
         each containing person's information.
         """
 
-        crew_role_names = ('Director', 'Writer', 'Producer', 'Music')
-
         casts = []
         crews = []
 
@@ -159,20 +157,23 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
 
         for role in movie_roles:
 
+            career_name = (
+                role.careers.all()[0].name) if role.careers.exists() else None
+
             person_info = {
                 'name': role.cast_crew.name,
                 'image': role.cast_crew.image.url,
-                'career': role.cast_crew.career,
-                'role': role.name,
+                'career': career_name,
+                'role': role.name
             }
 
-            if role.cast_crew.cast is True and role.name.capitalize() not in crew_role_names:
+            if role.cast_crew.cast and person_info['career'] in ('Actor', 'Actress'):
                 casts.append(person_info)
-            if role.cast_crew.crew is True and role.name.capitalize() in crew_role_names:
-                person_info['career'] = role.name.capitalize()
+            elif role.cast_crew.crew:
                 crews.append(person_info)
 
-        return {'casts': casts, 'crews': crews}
+        casts_crews = {'casts': casts, 'crews': crews}
+        return casts_crews
 
 
 class MovieFilterSerializer(serializers.Serializer):
