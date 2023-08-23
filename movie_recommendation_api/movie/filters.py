@@ -16,6 +16,8 @@ class MovieFilterSet(filters.FilterSet):
         search (CharFilter): Filter for searching movies by title
                              using full-text search.
         genre__title (CharFilter): Filter for searching movies by genre titles.
+        min_rating (NumberFilter): Filter for searching movies by min rating value.
+        max_rating (NumberFilter): Filter for searching movies by max rating value.
 
     Methods:
         filter_search(self, queryset, name, value): Custom filter method
@@ -34,6 +36,8 @@ class MovieFilterSet(filters.FilterSet):
     genre__title = filters.CharFilter(
         field_name='genre', method='filter_genre__title'
     )
+    min_rating = filters.NumberFilter(method='filter_min_rating')
+    max_rating = filters.NumberFilter(method='filter_max_rating')
 
     def filter_search(
             self, queryset: QuerySet[Movie], name: str, value: str
@@ -84,6 +88,46 @@ class MovieFilterSet(filters.FilterSet):
         for genre in genres:
             queryset = queryset.filter(genre__title__icontains=genre.strip())
 
+        return queryset
+
+    def filter_min_rating(
+            self, queryset: QuerySet[Movie], name: str, value: str
+    ) -> QuerySet[Movie]:
+
+        """
+        Filter movies based on their minimum average rating.
+
+        This custom filter method is used to filter a queryset of movies based on
+        their minimum average rating. It filters movies with an average rating
+        greater than or equal to the specified value.
+
+        :param queryset: The queryset of movies to filter.
+        :param name: The name of the filter field (unused in this method).
+        :param value: The minimum average rating value for filtering.
+        :return: The filtered queryset containing movies meeting the criteria.
+        """
+
+        queryset = queryset.filter(avg_rating__gte=value)
+        return queryset
+
+    def filter_max_rating(
+            self, queryset: QuerySet[Movie], name: str, value: str
+    ) -> QuerySet[Movie]:
+
+        """
+        Filter movies based on their maximum average rating.
+
+        This custom filter method is used to filter a queryset of movies based on
+        their maximum average rating. It filters movies with an average rating
+        less than or equal to the specified value.
+
+        :param queryset: The queryset of movies to filter.
+        :param name: The name of the filter field (unused in this method).
+        :param value: The maximum average rating value for filtering.
+        :return: The filtered queryset containing movies meeting the criteria.
+        """
+
+        queryset = queryset.filter(avg_rating__lte=value)
         return queryset
 
     # cast_crew__in = filters.CharFilter(

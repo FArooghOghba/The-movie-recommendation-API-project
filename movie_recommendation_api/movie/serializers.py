@@ -181,14 +181,23 @@ class MovieFilterSerializer(serializers.Serializer):
      Serializer for filtering movies.
 
     Fields:
-        title (CharField): The title of the movie.
-        search (CharField): The search query for filtering movies.
-        genre__title (CharField): The genres of the movies.
+        title (CharField, optional): The title of the movie.
+        search (CharField, optional): The search query for filtering movies.
+        genre__title (CharField, optional): The genres of the movies.
+        min_rating (DecimalField, optional): The min average rating for filtering.
+        max_rating (DecimalField, optional): The max average rating for filtering.
+
     """
 
     title = serializers.CharField(required=False, max_length=100)
     search = serializers.CharField(required=False, max_length=100)
     genre__title = serializers.CharField(required=False, max_length=100)
+    min_rating = serializers.DecimalField(
+        required=False, max_digits=2, decimal_places=1
+    )
+    max_rating = serializers.DecimalField(
+        required=False, max_digits=2, decimal_places=1
+    )
     # created_at__range = serializers.CharField(required=False, max_length=100)
     # author__in = serializers.CharField(required=False, max_length=100)
     # slug = serializers.CharField(required=False, max_length=100)
