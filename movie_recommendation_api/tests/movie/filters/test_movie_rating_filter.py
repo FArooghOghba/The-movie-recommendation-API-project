@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 
 from django.urls import reverse
 
@@ -13,8 +14,55 @@ pytestmark = pytest.mark.django_db
 MOVIE_LIST_URL = reverse('api:movie:list')
 
 
-def test_get_movies_by_filter_min_rating_success(
-    api_request, api_client, five_test_ratings
+@pytest.mark.parametrize(
+    'rating_filter', [
+        'min_rating',
+        'max_rating',
+    ]
+)
+def test_get_movies_by_filter_wrong_rating_return_error(
+    api_request, api_client, five_test_ratings, rating_filter
+) -> None:
+
+    """
+    Test that when an invalid rating is passed as a filter parameter,
+    the API returns a 400 Bad Request error.
+
+    :param api_request: The API request object.
+    :param api_client: The API client object.
+    :param five_test_ratings: A list of five test movie ratings.
+    :param rating_filter: The rating filter to use
+    (either 'min_rating' or 'max_rating').
+    """
+
+    # Set different ratings for test movies
+    ratings = [6.5, 7.3, 7.9, 8.2, 9.1]
+
+    for index, obj in enumerate(five_test_ratings):
+        obj.rating = ratings[index]
+        obj.save()
+
+    # Specify the minimum rating for filtering
+    rating = 'wrong_rate'
+    filter_params = {rating_filter: rating}
+
+    response = api_client.get(path=MOVIE_LIST_URL, data=filter_params)
+
+    # Ensure a successful response and correct number of results
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    'rate, result_count', [
+        (7.5, 3),
+        (6.5, 5),
+        (9.5, 0),
+        (6, 5),
+        ('', 5),
+    ]
+)
+def test_get_movies_by_filter_min_rating_return_success(
+    api_request, api_client, five_test_ratings, rate, result_count
 ) -> None:
 
     """
@@ -28,18 +76,20 @@ def test_get_movies_by_filter_min_rating_success(
     :param api_request: An instance of the Django test client.
     :param api_client: An instance of the API client.
     :param five_test_ratings: A fixture providing five test movie ratings.
+    :param rate: The minimum rating to filter by.
+    :param result_count: The expected number of results returned by the filter.
     :return: None
     """
 
     # Set different ratings for test movies
-    ratings = [6.4, 7.3, 7.9, 8.2, 9.1]
+    ratings = [6.5, 7.3, 7.9, 8.2, 9.1]
 
     for index, obj in enumerate(five_test_ratings):
         obj.rating = ratings[index]
         obj.save()
 
     # Specify the minimum rating for filtering
-    min_rating = 7.5
+    min_rating = rate
     filter_params = {'min_rating': min_rating}
 
     request = api_request.get(path=MOVIE_LIST_URL)
@@ -47,10 +97,11 @@ def test_get_movies_by_filter_min_rating_success(
 
     # Ensure a successful response and correct number of results
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data['results']) == 3
+    assert len(response.data['results']) == result_count
 
-    for movie in response.data['results']:
-        assert movie['rate'] > min_rating
+    if not rate == '':
+        for movie in response.data['results']:
+            assert movie['rate'] >= min_rating
 
     filtered_movies = get_movie_list(filters=filter_params)
 
@@ -60,8 +111,17 @@ def test_get_movies_by_filter_min_rating_success(
     assert response.data['results'] == filtered_movies_output_serializer.data
 
 
-def test_get_movies_by_filter_max_rating_success(
-    api_request, api_client, five_test_ratings
+@pytest.mark.parametrize(
+    'rate, result_count', [
+        (8, 3),
+        (6.5, 1),
+        (9.5, 5),
+        (6.0, 0),
+        ('', 5),
+    ]
+)
+def test_get_movies_by_filter_max_rating_return_success(
+    api_request, api_client, five_test_ratings, rate, result_count
 ) -> None:
 
     """
@@ -75,18 +135,20 @@ def test_get_movies_by_filter_max_rating_success(
     :param api_request: An instance of the Django test client.
     :param api_client: An instance of the API client.
     :param five_test_ratings: A fixture providing five test movie ratings.
+    :param rate: The maximum rating to filter by.
+    :param result_count: The expected number of results returned by the filter.
     :return: None
     """
 
     # Set different ratings for test movies
-    ratings = [6.4, 7.3, 7.9, 8.2, 9.1]
+    ratings = [6.5, 7.3, 7.9, 8.2, 9.1]
 
     for index, obj in enumerate(five_test_ratings):
         obj.rating = ratings[index]
         obj.save()
 
     # Specify the maximum rating for filtering
-    max_rating = 8.0
+    max_rating = rate
     filter_params = {'max_rating': max_rating}
 
     request = api_request.get(path=MOVIE_LIST_URL)
@@ -94,10 +156,11 @@ def test_get_movies_by_filter_max_rating_success(
 
     # Ensure a successful response and correct number of results
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data['results']) == 3
+    assert len(response.data['results']) == result_count
 
-    for movie in response.data['results']:
-        assert movie['rate'] < max_rating
+    if not rate == '':
+        for movie in response.data['results']:
+            assert movie['rate'] <= max_rating
 
     filtered_movies = get_movie_list(filters=filter_params)
 
@@ -107,8 +170,19 @@ def test_get_movies_by_filter_max_rating_success(
     assert response.data['results'] == filtered_movies_output_serializer.data
 
 
-def test_get_movies_by_filter_range_rating_success(
-    api_request, api_client, five_test_ratings
+@pytest.mark.parametrize(
+    'min_rate, max_rate, result_count', [
+        (6.5, 8, 2),
+        (6.4, 8.5, 4),
+        (9.5, 9.7, 0),
+        (6.0, 6.2, 0),
+        (9.0, 9.1, 1),
+        (6.0, 9.5, 5),
+        ('', '', 5),
+    ]
+)
+def test_get_movies_by_filter_range_rating_return_success(
+    api_request, api_client, five_test_ratings, min_rate, max_rate, result_count
 ) -> None:
 
     """
@@ -123,6 +197,9 @@ def test_get_movies_by_filter_range_rating_success(
     :param api_request: An instance of the Django test client.
     :param api_client: An instance of the API client.
     :param five_test_ratings: A fixture providing five test movie ratings.
+    :param min_rate: The minimum rating to filter by.
+    :param max_rate: The maximum rating to filter by.
+    :param result_count: The expected number of results returned by the filter.
     :return: None
     """
 
@@ -133,8 +210,8 @@ def test_get_movies_by_filter_range_rating_success(
         obj.rating = ratings[index]
         obj.save()
 
-    max_rating = 8.0
-    min_rating = 6.5
+    max_rating = max_rate
+    min_rating = min_rate
     filter_params = {
         'max_rating': max_rating,
         'min_rating': min_rating
@@ -143,10 +220,13 @@ def test_get_movies_by_filter_range_rating_success(
     request = api_request.get(path=MOVIE_LIST_URL)
     response = api_client.get(path=MOVIE_LIST_URL, data=filter_params)
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data['results']) == 2
+    assert len(response.data['results']) == result_count
 
-    for movie in response.data['results']:
-        assert min_rating < movie['rate'] < max_rating
+    if not min_rate == '':
+        for movie in response.data['results']:
+            assert (
+                Decimal(str(min_rating)) <= movie['rate'] <= Decimal(str(max_rating))
+            )
 
     filtered_movies = get_movie_list(filters=filter_params)
 
