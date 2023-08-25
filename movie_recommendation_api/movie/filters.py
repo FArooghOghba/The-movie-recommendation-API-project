@@ -18,7 +18,10 @@ class MovieFilterSet(filters.FilterSet):
         genre__title (CharFilter): Filter for searching movies by genre titles.
         min_rating (NumberFilter): Filter for searching movies by min rating value.
         max_rating (NumberFilter): Filter for searching movies by max rating value.
-
+        release_date_before (DateField, optional): The release date before which
+        to filter movies.
+        release_date_after (DateField, optional): The release date after which
+        to filter movies.
     Methods:
         filter_search(self, queryset, name, value): Custom filter method
                         for performing full-text search on movie titles.
@@ -38,6 +41,12 @@ class MovieFilterSet(filters.FilterSet):
     )
     min_rating = filters.NumberFilter(method='filter_min_rating')
     max_rating = filters.NumberFilter(method='filter_max_rating')
+    release_date_before = filters.DateFilter(
+        field_name='release_date', lookup_expr='lte'
+    )
+    release_date_after = filters.DateFilter(
+        field_name='release_date', lookup_expr='gte'
+    )
 
     def filter_search(
             self, queryset: QuerySet[Movie], name: str, value: str
