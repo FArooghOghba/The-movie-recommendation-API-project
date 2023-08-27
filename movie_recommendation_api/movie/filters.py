@@ -47,6 +47,10 @@ class MovieFilterSet(filters.FilterSet):
     release_date_after = filters.DateFilter(
         field_name='release_date', lookup_expr='gte'
     )
+    cast_crew = filters.CharFilter(
+        field_name='cast_crew__name',
+        method='filter_cast_crew'
+    )
 
     def filter_search(
             self, queryset: QuerySet[Movie], name: str, value: str
@@ -139,37 +143,39 @@ class MovieFilterSet(filters.FilterSet):
         queryset = queryset.filter(avg_rating__lte=value)
         return queryset
 
-    # cast_crew__in = filters.CharFilter(
-    #   field_name='cast_crew', method="filter_cast_crew__in"
-    # )
-    # release_date__range = filters.CharFilter(
-    #   field_name='release_date', method="filter_release_date__range"
-    # )
-    # rating__range = filters.
+    def filter_cast_crew(
+            self, queryset: QuerySet[Movie], name: str, value: str
+    ) -> QuerySet[Movie]:
+        """
+        Filter movies based on their cast and crew members.
 
-    # def filter_cast_crew__in(self, queryset, name, value):
-    #     limit = 10
-    #     cast_crew_names = value.split(",")
-    #     if len(cast_crew_names) > limit:
-    #         raise APIException(f"You cannot add more than {limit} cast/crew names")
-    #     return queryset.filter(cast_crew__name__in=cast_crew_names)
+        This custom filter method allows users to filter movies based on
+        the names of cast and crew members. Users can specify multiple names
+        separated by commas, and movies with any of the specified cast or crew
+        members will be included in the results.
 
-    # def filter_release_date__range(self, queryset, name, value):
-    #     limit = 2
-    #     release_date__in = value.split(",")
-    #     if len(release_date__in) > limit:
-    #         raise APIException("Please just add two date with ',' in the middle")
-    #
-    #     first_date, second_date = release_date__in
-    #
-    #     if not second_date:
-    #         second_date = timezone.now()
-    #
-    #     if not first_date:
-    #         return queryset.filter(release_date__date__lt=second_date)
-    #
-    #     return queryset.filter(release_date__date__range=(first_date, second_date))
+        :param queryset: The queryset of movies to filter.
+        :param name: The name of the filter field (unused in this method).
+        :param value: The names of cast and crew members to filter by
+        (comma-separated).
+        :return: The filtered queryset containing movies meeting the criteria.
+        """
+
+        limit = 5
+        names = value.split(",")
+        filter_condition = Q()
+
+        print(names)
+        if len(names) > limit:
+            raise LimitExceededException(f"You cannot add more than {limit} genres")
+        for name in names:
+            # Create a Q object that checks if the name appears in
+            # either the cast or crew
+            filter_condition |= Q(cast_crew__name__icontains=name.strip())
+
+        queryset = queryset.filter(filter_condition)
+        return queryset
 
     class Meta:
         model = Movie
-        fields = ('title', 'genre', 'search')
+        fields = ('title', 'genre', 'search', 'cast_crew')

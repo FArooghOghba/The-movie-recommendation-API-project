@@ -43,7 +43,7 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'poster', 'trailer', 'genres',
             'rate', 'movie_detail_url', 'synopsis_snippet',
-            'release_date'
+            'cast_crew', 'release_date'
         ]
 
     def get_genres(self, obj):
@@ -204,3 +204,6 @@ class MovieFilterSerializer(serializers.Serializer):
     )
     release_date_before = serializers.DateField(required=False)
     release_date_after = serializers.DateField(required=False)
+    cast_crew = serializers.CharField(
+        required=False, max_length=255
+    )

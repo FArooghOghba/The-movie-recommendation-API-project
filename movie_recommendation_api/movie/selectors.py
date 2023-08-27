@@ -25,8 +25,8 @@ def get_movie_list(*, filters: Optional[dict] = None) -> QuerySet[Movie]:
     filters = filters or {}
 
     movies_queryset = Movie.objects \
-        .prefetch_related('genre')\
-        .defer('cast_crew', 'runtime', 'created_at', 'updated_at')
+        .prefetch_related('genre', 'cast_crew')\
+        .defer('runtime', 'created_at', 'updated_at')
 
     movies_queryset = movies_queryset\
         .annotate(avg_rating=Avg('movie_ratings__rating'))
