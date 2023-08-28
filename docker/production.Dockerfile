@@ -15,4 +15,5 @@ COPY ./ /app/
 # Installing all python dependencies
 RUN apt-get update && \
     apt-get install --fix-missing -y gcc libpq-dev && \
+    pip install --upgrade pip && \
     pip install -r requirements/production.txt
