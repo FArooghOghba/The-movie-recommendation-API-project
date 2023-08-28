@@ -43,7 +43,7 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'poster', 'trailer', 'genres',
             'rate', 'movie_detail_url', 'synopsis_snippet',
-            'cast_crew', 'release_date'
+            'release_date'
         ]
 
     def get_genres(self, obj):
