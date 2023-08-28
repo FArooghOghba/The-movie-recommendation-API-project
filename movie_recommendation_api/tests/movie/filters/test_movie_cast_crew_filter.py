@@ -22,7 +22,7 @@ MOVIE_LIST_URL = reverse('api:movie:list')
 def test_get_movie_by_filter_cast_crew_return_success(
     api_client, five_test_movies, first_test_cast, first_test_crew,
     second_test_cast, second_test_crew, third_test_cast, third_test_crew,
-    request, cast_crew_filter, expected_movie_ids
+    request, cast_crew_filter, expected_movie_ids, django_db_reset_sequences
 ) -> None:
 
     """
