@@ -8,7 +8,8 @@ from drf_spectacular.utils import extend_schema
 
 from movie_recommendation_api.movie.models import Movie
 from movie_recommendation_api.movie.serializers.movie_detail_serializers import (
-    MovieDetailInPutSerializer, MovieDetailOutPutModelSerializer
+    MovieDetailRatingInPutSerializer, MovieDetailReviewInPutSerializer,
+    MovieDetailOutPutModelSerializer
 )
 from movie_recommendation_api.movie.services import rate_movie, review_movie
 from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_obj
@@ -21,27 +22,19 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
     """
     API view for retrieving a movie detail.
 
-    This view allows clients to retrieve the detailed representation of a movie
-    and rate a movie by sending GET and POST requests to the movie detail endpoint.
+    This view allows clients to retrieve the detailed representation of a movie.
     The view uses the `MovieDetailOutPutModelSerializer` to serialize the output
-    representation of the movie and the `MovieDetailInPutSerializer` to validate
-    the input data for rating a movie.
+    representation of the movie.
 
     Output Serializer:
         MovieDetailOutPutModelSerializer: Serializer for the detailed
         representation of a movie.
 
-    Input Serializer:
-        MovieDetailInPutSerializer: Serializer for validating the input
-        data for rating a movie.
-
-    Methods:
-        get(self, request, movie_slug): Retrieves the detail of a movie
+    :Methods:
+        get (self, request, movie_slug): Retrieve the detail of a movie
         based on the provided movie slug.
-        post(self, request, movie_slug): POST method for creating a movie rating.
     """
 
-    movie_input_serializer = MovieDetailInPutSerializer
     movie_output_serializer = MovieDetailOutPutModelSerializer
 
     def get_object(self) -> Movie:
@@ -54,25 +47,6 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
         movie_slug = self.kwargs.get('movie_slug')
         movie = get_movie_obj(movie_slug=movie_slug)
         return movie
-
-    def get_permissions(self) -> Sequence[Any] | Any:
-        """
-        Retrieves the permission classes for the current request.
-
-        This method overrides the default `get_permissions` method to add
-        custom permissions for the `post` method. If the current request method
-        is `POST`, it adds an instance of the `CanRateAfterReleaseDate` permission
-        class to the list of permission classes.
-
-        :return: A list of permission classes to be used for the current request.
-        """
-
-        permissions = super().get_permissions()
-
-        if self.request.method == 'POST':
-            return permissions + [CanRateAfterReleaseDate()]
-
-        return permissions
 
     @extend_schema(
         responses=MovieDetailOutPutModelSerializer,
@@ -116,8 +90,53 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
 
         return Response(output_serializer.data, status=status.HTTP_200_OK)
 
+
+class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
+
+    """
+    API view for rating a movie.
+
+    This view allows users to rate a movie by sending a POST request.
+
+    Input Serializer:
+        MovieDetailRatingInPutSerializer: Serializer for validating the input
+        data for rating a movie.
+
+    Methods:
+        post(self, request, movie_slug): POST method for creating a movie rating.
+    """
+
+    movie_input_serializer = MovieDetailRatingInPutSerializer
+    movie_output_serializer = MovieDetailOutPutModelSerializer
+
+    def get_object(self) -> Movie:
+        """
+        Retrieves the movie object based on the provided movie slug.
+
+        :return: The retrieved movie object.
+        """
+
+        movie_slug = self.kwargs.get('movie_slug')
+        movie = get_movie_obj(movie_slug=movie_slug)
+        return movie
+
+    def get_permissions(self) -> Sequence[Any] | Any:
+        """
+        Retrieves the permission classes for the current request.
+
+        This method overrides the default `get_permissions` method to add
+        custom permissions for the `post` method. If the current request method
+        is `POST`, it adds an instance of the `CanRateAfterReleaseDate` permission
+        class to the list of permission classes.
+
+        :return: A list of permission classes to be used for the current request.
+        """
+
+        permissions = super().get_permissions()
+        return permissions + [CanRateAfterReleaseDate()]
+
     @extend_schema(
-        request=MovieDetailInPutSerializer,
+        request=MovieDetailRatingInPutSerializer,
         responses=MovieDetailOutPutModelSerializer
     )
     def post(self, request, movie_slug):
@@ -135,7 +154,7 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
 
 
         :param request: (HttpRequest): The request object containing the rating data.
-        :param movie_slug: (str): The slug of the movie for which the rating
+        :param movie_slug: (Str): The slug of the movie for which the rating
                 is being added.
         :return: Response: A response containing the detailed representation
                 of the rated movie, including the newly added rating.
@@ -156,6 +175,7 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
             )
 
             rated_movie = get_movie_detail(movie_slug=movie_slug, user=user)
+
         except Exception as exc:
             exception_response = handle_exceptions(
                 exc=exc, ctx={"request": request, "view": self}
