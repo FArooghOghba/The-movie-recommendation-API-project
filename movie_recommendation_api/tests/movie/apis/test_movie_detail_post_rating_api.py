@@ -11,22 +11,22 @@ from rest_framework import status
 pytestmark = pytest.mark.django_db
 
 
-def movie_detail_url(movie_slug: str) -> str:
+def movie_rating_url(movie_slug: str) -> str:
     """
-    Generate the URL for the movie detail API endpoint based on the movie slug.
+    Generate the URL for the movie rating API endpoint based on the movie slug.
 
     This function takes a movie slug as input and generates the URL for the
-    movie detail API endpoint by using the `reverse` function provided by Django's
+    movie rating API endpoint by using the `reverse` function provided by Django's
     URL resolver. The movie slug is included as a parameter in the URL.
 
     :param movie_slug: The slug of the movie.
-    :return: The URL for the movie detail API endpoint.
+    :return: The URL for the movie 'rating API' endpoint.
     """
-    return reverse(viewname='api:movie:detail', args=[movie_slug])
+    return reverse(viewname='api:movie:rating', args=[movie_slug])
 
 
 def test_post_rate_to_movie_should_success(
-    test_movie_with_cast_crew_role_and_two_user_ratings, api_client,
+    test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews, api_client,
     test_movie_without_cast_crew, third_test_user
 ) -> None:
     """
@@ -35,11 +35,11 @@ def test_post_rate_to_movie_should_success(
     This test ensures that an authorized user can post a valid rating for a movie.
     The user's authentication is forced using the 'api_client.force_authenticate()'
     method, and the 'api_client.post()' method is used to post the rating.
-    and that the average rating is calculated correctly for the movie.
+    And that the average rating is calculated correctly for the movie.
 
     :param api_client: An instance of the Django REST Framework's APIClient.
-    :param test_movie_with_cast_crew_role_and_two_user_ratings: A fixture providing
-    a test movie object with cast, crew, role, and two user ratings.
+    :param test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews: A fixture
+    providing a test movie object with cast, crew, role, and two user ratings and review.
     :param test_movie_without_cast_crew: A fixture providing a test movie object
     without cast and crew.
     :param third_test_user: A fixture providing the third test user object.
@@ -49,7 +49,7 @@ def test_post_rate_to_movie_should_success(
     # Authenticate the second test user for the API call
     api_client.force_authenticate(user=third_test_user)
 
-    url = movie_detail_url(movie_slug=test_movie_without_cast_crew.slug)
+    url = movie_rating_url(movie_slug=test_movie_without_cast_crew.slug)
     payload = {'rate': 7}
 
     response = api_client.post(path=url, data=payload)
@@ -99,7 +99,7 @@ def test_post_rate_to_movie_does_not_exists_should_error(
 
     not_exists_movie_slug = 'not-exists-movie-slug'
 
-    url = movie_detail_url(movie_slug=not_exists_movie_slug)
+    url = movie_rating_url(movie_slug=not_exists_movie_slug)
     payload = {'rate': 7}
 
     response = api_client.post(path=url, data=payload)
@@ -120,7 +120,7 @@ def test_post_rate_to_movie_with_unauthorized_user_should_error(
     :return: None
     """
 
-    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    url = movie_rating_url(movie_slug=first_test_movie.slug)
     payload = {'rate': 7}
 
     response = api_client.post(path=url, data=payload)
@@ -143,7 +143,7 @@ def test_post_rate_to_movie_with_wrong_data_should_error(
 
     This parameterized test checks various cases where the provided rate data
     is invalid, such as wrong rate format, non-integer rate, empty string,
-    or whitespace.
+    or white-space.
 
     The test ensures that the API returns a 400 Bad Request status for each
     invalid case.
@@ -157,7 +157,7 @@ def test_post_rate_to_movie_with_wrong_data_should_error(
 
     api_client.force_authenticate(user=first_test_user)
 
-    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    url = movie_rating_url(movie_slug=first_test_movie.slug)
     payload = {'rate': wrong_rate}
 
     response = api_client.post(path=url, data=payload)
@@ -178,7 +178,7 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
     is 403 Forbidden, indicating that the user is not allowed to rate the movie
     because it has not been released yet.
 
-    :param api_client: The API client used to send requests to the API.
+    :param api_client: The 'API client' used to send requests to the API.
     :param first_test_movie: The test movie object.
     :param first_test_user: The test user object.
     :return: None
@@ -191,7 +191,7 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
 
     api_client.force_authenticate(user=first_test_user)
 
-    url = movie_detail_url(movie_slug=first_test_movie.slug)
+    url = movie_rating_url(movie_slug=first_test_movie.slug)
     payload = {'rate': 8}
 
     response = api_client.post(path=url, data=payload)

@@ -6,7 +6,7 @@ from movie_recommendation_api.movie.serializers.movie_list_serializers import (
 )
 
 
-class MovieDetailInPutSerializer(serializers.Serializer):
+class MovieDetailRatingInPutSerializer(serializers.Serializer):
     """
     Serializer for validating and deserializing the input data for rating a movie.
 
