@@ -6,7 +6,9 @@ from django.urls import reverse
 from rest_framework import status
 
 from movie_recommendation_api.movie.selectors import get_movie_list
-from movie_recommendation_api.movie.serializers import MovieOutPutModelSerializer
+from movie_recommendation_api.movie.serializers.movie_list_serializers import (
+    MovieOutPutModelSerializer
+)
 
 
 pytestmark = pytest.mark.django_db

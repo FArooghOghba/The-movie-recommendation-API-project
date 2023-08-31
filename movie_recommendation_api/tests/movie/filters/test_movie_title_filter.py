@@ -5,7 +5,10 @@ from django.urls import reverse
 from rest_framework import status
 
 from movie_recommendation_api.movie.selectors import get_movie_list
-from movie_recommendation_api.movie.serializers import MovieOutPutModelSerializer
+from movie_recommendation_api.movie.serializers.movie_list_serializers import (
+    MovieOutPutModelSerializer
+)
+
 
 pytestmark = pytest.mark.django_db
 
@@ -236,43 +239,3 @@ def test_get_movies_by_filter_empty_title_should_return_movie_list(
 #     )
 #     assert response.data['results'] == filtered_movies_output_serializer.data
 #
-#
-#
-# @pytest.mark.django_db
-# def test_filter_movies_by_cast_crew(api_client, create_movie):
-#     # Create sample movies
-#     movie1 = create_movie(title="Movie 1", cast_crew="Actor1,Actor2,Actor3")
-#     movie2 = create_movie(title="Movie 2", cast_crew="Actor2,Actor3,Actor4")
-#     movie3 = create_movie(title="Movie 3", cast_crew="Actor1,Actor4,Actor5")
-#
-#     url = reverse("movie-list")
-#     filter_params = {"cast_crew__in": "Actor1,Actor2"}
-#
-#     # Perform the request
-#     response = api_client.get(url, filter_params)
-#
-#     # Verify response status code
-#     assert response.status_code == status.HTTP_200_OK
-#
-#     # Verify filtered movies
-#     filtered_movies = response.json()["results"]
-#     assert len(filtered_movies) == 2
-#     assert movie1.title in [movie["title"] for movie in filtered_movies]
-#     assert movie2.title in [movie["title"] for movie in filtered_movies]
-#
-#
-# @pytest.mark.django_db
-# def test_filter_movies_by_cast_crew_limit(api_client, create_movie):
-#     # Create sample movies
-#     create_movie(title="Movie 1", cast_crew="Actor1,Actor2,Actor3")
-#     create_movie(title="Movie 2", cast_crew="Actor2,Actor3,Actor4")
-#     create_movie(title="Movie 3", cast_crew="Actor1,Actor4,Actor5")
-#
-#     url = reverse("movie-list")
-#     filter_params = {"cast_crew__in": "Actor1,Actor2,Actor3,Actor4,Actor5,Actor6"}
-#
-#     # Perform the request
-#     response = api_client.get(url, filter_params)
-#
-#     # Verify response status code
-#     assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -1,6 +1,7 @@
 from django.urls import path
 
-from movie_recommendation_api.movie.apis import MovieAPIView, MovieDetailAPIView
+from movie_recommendation_api.movie.apis.movie_list_apis import MovieAPIView
+from movie_recommendation_api.movie.apis.movie_detail_apis import MovieDetailAPIView
 
 
 app_name = 'movie'

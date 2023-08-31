@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from movie_recommendation_api.movie.selectors import get_movie_detail
-from movie_recommendation_api.movie.serializers import (
+from movie_recommendation_api.movie.serializers.movie_detail_serializers import (
     MovieDetailOutPutModelSerializer
 )
 
