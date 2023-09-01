@@ -7,6 +7,7 @@ from movie_recommendation_api.movie.serializers.movie_list_serializers import (
 
 
 class MovieDetailRatingInPutSerializer(serializers.Serializer):
+
     """
     Serializer for validating and deserializing the input data for rating a movie.
 
@@ -27,6 +28,21 @@ class MovieDetailRatingInPutSerializer(serializers.Serializer):
     rate = serializers.ChoiceField(
         choices=rate_choices,
         help_text="The user's rating for the movie (1 to 10)."
+    )
+
+
+class MovieDetailReviewInPutSerializer(serializers.Serializer):
+
+    """
+    Serializer for validating the input data when creating a movie review.
+
+    Attributes:
+        review (str): The user's review for the movie (max length: 512 characters).
+    """
+
+    review = serializers.CharField(
+        max_length=512,
+        help_text="The user's review for the movie."
     )
 
 

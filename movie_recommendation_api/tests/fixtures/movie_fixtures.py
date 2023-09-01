@@ -136,10 +136,11 @@ def three_test_movies() -> QuerySet[MovieFactory]:
 
 
 @pytest.fixture
-def test_movie_with_cast_crew_role_and_two_user_ratings(
+def test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews(
         test_movie_without_cast_crew, first_test_user, second_test_user,
         first_test_cast, first_test_crew, first_test_role, second_test_role,
-        first_test_rating, second_test_rating
+        first_test_rating, second_test_rating,
+        first_test_review, second_test_review
 ) -> None:
 
     """
@@ -160,6 +161,8 @@ def test_movie_with_cast_crew_role_and_two_user_ratings(
     :param second_test_role: A fixture providing the second test role object.
     :param first_test_rating: A fixture providing the first test rating object.
     :param second_test_rating: A fixture providing the second test rating object.
+    :param first_test_review: A fixture providing the first test review object.
+    :param second_test_review: A fixture providing the second test review object.
     :return: None
     """
 
@@ -172,6 +175,16 @@ def test_movie_with_cast_crew_role_and_two_user_ratings(
     second_test_rating.user = second_test_user
     second_test_rating.movie = test_movie_without_cast_crew
     second_test_rating.save()
+
+    # creating review for the first test user in a first test movie.
+    first_test_review.user = first_test_user
+    first_test_review.movie = test_movie_without_cast_crew
+    first_test_review.save()
+
+    # creating review for the second test user in a first test movie.
+    second_test_review.user = second_test_user
+    second_test_review.movie = test_movie_without_cast_crew
+    second_test_review.save()
 
     # creating a role for cast member in the first test movie.
     first_test_role.movie = test_movie_without_cast_crew

@@ -189,3 +189,78 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
             rated_movie, context={'request': request}
         )
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class MovieDetailReviewAPIView(ApiAuthMixin, APIView):
+
+    """
+    API view for reviewing a movie.
+
+    This view allows users to review a movie by sending a POST request.
+
+    Input Serializer:
+        MovieDetailReviewInputSerializer: Serializer for validating the input
+        data for reviewing a movie.
+
+    Methods:
+        post (self, request, movie_slug): POST method for creating a movie review.
+    """
+
+    movie_input_serializer = MovieDetailReviewInPutSerializer
+    movie_output_serializer = MovieDetailOutPutModelSerializer
+
+    def get_object(self) -> Movie:
+        """
+        Retrieves the movie object based on the provided movie slug.
+
+        :return: The retrieved movie object.
+        """
+
+        movie_slug = self.kwargs.get('movie_slug')
+        movie = get_movie_obj(movie_slug=movie_slug)
+        return movie
+
+    @extend_schema(
+        request=MovieDetailReviewInPutSerializer,
+        responses=MovieDetailOutPutModelSerializer
+    )
+    def post(self, request, movie_slug):
+
+        """
+        POST method for creating a movie review.
+
+        :param request: (HttpRequest): The request object containing the review data.
+        :param movie_slug: (str): The slug of the movie for which the review
+                is being added.
+        :return: Response: A response containing the detailed representation
+                of the reviewed movie, including the newly added review.
+
+        :raises Authorization: If the user is not authorized.
+        :raises DoesNotExist: If the movie does not exist.
+        """
+
+        input_serializer = self.movie_input_serializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        try:
+            user = request.user
+            review = input_serializer.validated_data.get('review')
+            review_movie(
+                user=user, movie_slug=movie_slug, review=review
+            )
+
+            reviewed_movie = get_movie_detail(movie_slug=movie_slug, user=user)
+
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
+            return Response(
+                data=exception_response.data,
+                status=exception_response.status_code,
+            )
+
+        output_serializer = self.movie_output_serializer(
+            reviewed_movie, context={'request': request}
+        )
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)

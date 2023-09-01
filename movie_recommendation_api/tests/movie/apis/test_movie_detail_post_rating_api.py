@@ -39,7 +39,8 @@ def test_post_rate_to_movie_should_success(
 
     :param api_client: An instance of the Django REST Framework's APIClient.
     :param test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews: A fixture
-    providing a test movie object with cast, crew, role, and two user ratings and review.
+    providing a test movie object with cast, crew, role, and two user ratings
+    and review.
     :param test_movie_without_cast_crew: A fixture providing a test movie object
     without cast and crew.
     :param third_test_user: A fixture providing the third test user object.

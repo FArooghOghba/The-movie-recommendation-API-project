@@ -25,14 +25,15 @@ def movie_detail_url(movie_slug: str) -> str:
     URL resolver. The movie slug is included as a parameter in the URL.
 
     :param movie_slug: The slug of the movie.
-    :return: The URL for the movie detail API endpoint.
+    :return: The URL for the movie 'detail API' endpoint.
     """
     return reverse(viewname='api:movie:detail', args=[movie_slug])
 
 
 def test_get_movie_detail_should_success(
-    test_movie_with_cast_crew_role_and_two_user_ratings, api_client, first_test_user,
-    test_movie_without_cast_crew, first_test_rating, second_test_rating
+    test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews, api_client,
+    first_test_user, test_movie_without_cast_crew, first_test_rating,
+    second_test_rating
 ) -> None:
     """
     Test that retrieving movie details for an authenticated user should succeed.
@@ -42,8 +43,8 @@ def test_get_movie_detail_should_success(
     'api_client.force_authenticate()' method, and the 'api_client.get()'
     method is used to perform the GET request for movie details.
 
-    :param test_movie_with_cast_crew_role_and_two_user_ratings: A fixture providing
-    a test movie object with cast, crew, role, and two user ratings.
+    :param test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews: A fixture
+    providing a test movie object with cast, crew, role, and two user ratings.
     :param api_client: An instance of the Django REST Framework's APIClient.
     :param test_movie_without_cast_crew: A fixture providing a test
     movie object without cast and crew.
@@ -76,7 +77,7 @@ def test_get_movie_detail_should_success(
 
 
 def test_get_movie_detail_with_cast_crew_role_should_return_success(
-        api_client, test_movie_with_cast_crew_role_and_two_user_ratings,
+        api_client, test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews,
         test_movie_without_cast_crew
 ) -> None:
 
@@ -87,8 +88,8 @@ def test_get_movie_detail_with_cast_crew_role_should_return_success(
     accurate and consistent information about the movie's cast and crew roles.
 
     :param api_client: A DRF API client instance.
-    :param test_movie_with_cast_crew_role_and_two_user_ratings: A fixture providing
-    a test movie object with cast, crew, role, and two user ratings.
+    :param test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews: A fixture
+    providing a test movie object with cast, crew, role, and two user ratings.
     :param test_movie_without_cast_crew: A fixture providing a test movie object
     without cast and crew roles.
     :return: None

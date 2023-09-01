@@ -2,7 +2,7 @@ from django.urls import path
 
 from movie_recommendation_api.movie.apis.movie_list_apis import MovieAPIView
 from movie_recommendation_api.movie.apis.movie_detail_apis import (
-    MovieDetailAPIView, MovieDetailRatingAPIView
+    MovieDetailAPIView, MovieDetailRatingAPIView, MovieDetailReviewAPIView
 )
 
 
@@ -26,5 +26,11 @@ urlpatterns = [
         'rating/<slug:movie_slug>/',
         MovieDetailRatingAPIView.as_view(),
         name="rating"
+    ),
+
+    path(
+        'review/<slug:movie_slug>/',
+        MovieDetailReviewAPIView.as_view(),
+        name="review"
     ),
 ]

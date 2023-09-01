@@ -1,7 +1,20 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
-from movie_recommendation_api.movie.models import Movie, Rating
+from movie_recommendation_api.movie.models import Movie, Rating, Review
+
+
+def get_movie(movie_slug: str) -> Movie:
+
+    """
+    Retrieve a movie by its unique slug.
+
+    :param movie_slug: The unique slug of the movie.
+    :return: The retrieved Movie object.
+    """
+
+    movie = Movie.objects.get(slug=movie_slug)
+    return movie
 
 
 @transaction.atomic
@@ -27,10 +40,31 @@ def rate_movie(*, user: get_user_model(), movie_slug: str, rate: int) -> Movie:
     :return: Movie object that has been rated.
     """
 
-    movie = Movie.objects.get(slug=movie_slug)
+    movie = get_movie(movie_slug=movie_slug)
 
     Rating.objects.create(
         user=user, movie=movie, rating=rate
+    )
+    # cache_profile(user=user)
+
+    return movie
+
+
+@transaction.atomic
+def review_movie(*, user: get_user_model(), movie_slug: str, review: str) -> Movie:
+    """
+    Create a movie review for a specific movie.
+
+    :param user: The user who is writing the review (User model instance).
+    :param movie_slug: The slug of the movie for which the review is being written.
+    :param review: The content of the review.
+    :return: The Movie object associated with the review.
+    """
+
+    movie = get_movie(movie_slug=movie_slug)
+
+    Review.objects.create(
+        user=user, movie=movie, content=review
     )
     # cache_profile(user=user)
 
