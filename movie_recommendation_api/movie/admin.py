@@ -134,3 +134,26 @@ class GenreAdmin(admin.ModelAdmin):
     prepopulated_fields = {
         'slug': ['title']
     }
+
+
+@admin.register(models.Review)
+class ReviewAdmin(admin.ModelAdmin):
+    """
+    Custom admin class for the Review model.
+
+    This custom admin class is used to configure the administration interface
+    for the Review model. It defines how reviews are displayed and searched
+    within the admin panel.
+
+    Attributes:
+        search_fields (list): A list of fields that can be searched for reviews
+            within the admin panel. In this case, 'user' is searchable.
+        list_display (list): A list of fields that will be displayed in the list
+            view of reviews within the admin panel. In this case, only 'user'
+            is displayed.
+    """
+
+    search_fields = ['user']
+    list_display = [
+        'user'
+    ]

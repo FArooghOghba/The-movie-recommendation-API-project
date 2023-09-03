@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch, QuerySet
 from django.db.models.aggregates import Avg
 
-from movie_recommendation_api.movie.models import Movie, Rating, Role
+from movie_recommendation_api.movie.models import Movie, Rating, Review, Role
 from movie_recommendation_api.movie.filters import MovieFilterSet
 
 
@@ -42,8 +42,9 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
     Retrieve detailed information about a specific movie by its slug.
 
     This function retrieves the detailed representation of a movie based on its slug.
-    It includes information such as the movie's genres, cast and crew members,
-    average rating, total number of ratings, and the user's rating if authenticated.
+    It includes information such as the movie's genres, cast and crew members, reviews,
+    average rating, total number of ratings, total number of reviews and
+    the user's rating if authenticated.
 
     :param movie_slug: (str): The slug of the movie to retrieve.
     :param user: (Optional) The authenticated user (if available).
@@ -60,12 +61,26 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
         to_attr='cast_crew_roles'
     )
 
+    # Create a Prefetch object that fetches reviews along with their related user
+    reviews = Prefetch(
+        lookup='reviews',
+        queryset=Review.objects.select_related('user'),
+        to_attr='movie_reviews'
+    )
+
     # Fetch the movie with the associated genres, cast_crews, and their roles
     movie = (
         Movie.objects
-        .prefetch_related('genre', cast_crew)
+        .prefetch_related('genre', reviews, cast_crew)
         .get(slug=movie_slug)
     )
+
+    # Annotates the count of reviews for the movie
+    reviews_data = movie.reviews.aggregate(
+        reviews_count=Count('id')
+    )
+
+    movie.reviews_count = reviews_data['reviews_count']
 
     # Calculate the average rating for the movie
     # Annotates the count of ratings for the movie

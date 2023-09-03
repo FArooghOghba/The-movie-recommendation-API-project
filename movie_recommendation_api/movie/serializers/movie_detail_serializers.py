@@ -54,13 +54,19 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
 
     Additional Fields:
         ratings_count (int): The total number of ratings for the movie.
-                        This field represents the count of ratings given by users.
-                        It is a non-negative integer value.
+            This field represents the count of ratings given by users.
+            It is a non-negative integer value.
         user_rating (int): The rating given by the authenticated user (if any).
-                        This field represents the rating given by the user who
-                        is currently authenticated and making the request. If the
-                        user has not rated the movie, it will be set to 0.
-                        It is an integer value between 0 and 10 (inclusive).
+            This field represents the rating given by the user who
+            is currently authenticated and making the request. If the
+            user has not rated the movie, it will be set to 0.
+            It is an integer value between 0 and 10 (inclusive).
+        reviews_count (int): The total number of reviews for the movie.
+            This field represents the count of reviews written by users.
+            It is a non-negative integer value.
+        reviews (list): The list of reviews associated with the movie.
+            Each review includes details such as the username of the reviewer,
+            the content of the review, and the date and time it was created.
 
     Fields:
         id (int): The unique identifier for the movie.
@@ -68,7 +74,7 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
         poster (ImageField): The image field for the movie's poster.
         genres (list): The list of genre titles associated with the movie.
         rate (DecimalField): The average rating of the movie.
-        cast_crew (ManyToManyField): The cast and crew members associated
+        cast_crews (ManyToManyField): The cast and crew members associated
         with the movie.
         synopsis (str): The synopsis of the movie.
         trailer (URLField): The URL of the movie's trailer.
@@ -79,12 +85,14 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
     ratings_count = serializers.IntegerField(min_value=0)
     user_rating = serializers.SerializerMethodField()
     cast_crews = serializers.SerializerMethodField()
+    reviews_count = serializers.IntegerField(min_value=0)
+    reviews = serializers.SerializerMethodField()
 
     class Meta(MovieOutPutModelSerializer.Meta):
         fields = [
             'id', 'title', 'poster', 'genres', 'rate', 'ratings_count',
             'user_rating', 'cast_crews', 'synopsis', 'trailer', 'runtime',
-            'release_date'
+            'release_date', 'reviews_count', 'reviews'
         ]
 
     def get_user_rating(self, obj: Movie) -> int:
@@ -130,3 +138,25 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
 
         casts_crews = {'casts': casts, 'crews': crews}
         return casts_crews
+
+    def get_reviews(self, obj) -> list[dict]:
+        """
+         Returns a list of reviews associated with the movie.
+
+        :param obj: The movie object.
+        :return: list: List of reviews.
+        """
+
+        review_queryset = obj.movie_reviews
+
+        reviews = []
+
+        for review_obj in review_queryset:
+            review_detail = {
+                'user': review_obj.user.username,
+                'content': review_obj.content,
+                'datetime': review_obj.created_at
+            }
+            reviews.append(review_detail)
+
+        return reviews

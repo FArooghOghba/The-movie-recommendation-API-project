@@ -33,7 +33,7 @@ def movie_detail_url(movie_slug: str) -> str:
 def test_get_movie_detail_should_success(
     test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews, api_client,
     first_test_user, test_movie_without_cast_crew, first_test_rating,
-    second_test_rating
+    second_test_rating, first_test_review, second_test_review
 ) -> None:
     """
     Test that retrieving movie details for an authenticated user should succeed.
@@ -51,6 +51,8 @@ def test_get_movie_detail_should_success(
     :param first_test_user: A fixture providing the first test user object.
     :param first_test_rating: A fixture providing the first test rating object.
     :param second_test_rating: A fixture providing the second test rating object.
+    :param first_test_review: A fixture providing the first test review object.
+    :param second_test_review: A fixture providing the second test review object.
     :return: None
     """
 
@@ -74,6 +76,54 @@ def test_get_movie_detail_should_success(
     # Assertion: Check that the logged-in user's rating is returned correctly
     expected_logged_in_user_rating = first_test_rating.rating
     assert response.data['user_rating'] == expected_logged_in_user_rating
+
+    # Assertion: Check that the number of reviews for the movie
+    expected_reviews_count = len([first_test_review, second_test_review])
+    assert response.data['reviews_count'] == expected_reviews_count
+
+    # Assertion: Check that the logged-in user's review is returned correctly
+    expected_logged_in_user_review = first_test_review.content
+    response_reviews = response.data['reviews']
+    response_reviews_content = [review['content'] for review in response_reviews]
+    assert expected_logged_in_user_review in response_reviews_content
+
+
+def test_get_movie_detail_with_reviews_should_return_success(
+        api_client, test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews,
+        test_movie_without_cast_crew
+) -> None:
+
+    """
+    Test the retrieval of movie details with reviews, ensuring a successful response.
+
+    This test case checks if the API endpoint for retrieving movie details with reviews
+    returns a successful response (HTTP 200 OK) when accessing a movie with reviews.
+
+    :param api_client: A DRF API client for making requests.
+    :param test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews:
+        A fixture representing a movie with cast crew roles, user ratings, and reviews.
+    :param test_movie_without_cast_crew: A fixture representing a movie without cast crew.
+    :return: None
+    """
+
+    url = movie_detail_url(movie_slug=test_movie_without_cast_crew.slug)
+
+    response = api_client.get(path=url)
+    assert response.status_code == status.HTTP_200_OK
+
+    # Assertion: Check that reviews information in the response matches the expected data
+    # Fetch the expected movie details using the same function as the API
+    test_movie = get_movie_detail(movie_slug=test_movie_without_cast_crew.slug)
+
+    # Serialize the expected movie data with reviews
+    test_movie_output_serializer = MovieDetailOutPutModelSerializer(
+        instance=test_movie,
+        context={'user_rating': getattr(test_movie, 'user_rating', None)}
+    )
+
+    response_reviews = response.data['reviews']
+    test_movie_reviews = test_movie_output_serializer.data['reviews']
+    assert response_reviews == test_movie_reviews
 
 
 def test_get_movie_detail_with_cast_crew_role_should_return_success(
