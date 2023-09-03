@@ -96,13 +96,16 @@ def test_get_movie_detail_with_reviews_should_return_success(
     """
     Test the retrieval of movie details with reviews, ensuring a successful response.
 
-    This test case checks if the API endpoint for retrieving movie details with reviews
-    returns a successful response (HTTP 200 OK) when accessing a movie with reviews.
+    This test case checks if the API endpoint for retrieving movie details with
+    reviews returns a successful response (HTTP 200 OK) when accessing a movie
+    with reviews.
 
     :param api_client: A DRF API client for making requests.
     :param test_movie_with_cast_crew_role_and_two_user_ratings_and_reviews:
-        A fixture representing a movie with cast crew roles, user ratings, and reviews.
-    :param test_movie_without_cast_crew: A fixture representing a movie without cast crew.
+        A fixture representing a movie with cast crew roles, user ratings,
+        and reviews.
+    :param test_movie_without_cast_crew: A fixture representing a movie
+    without cast crew.
     :return: None
     """
 
@@ -111,8 +114,9 @@ def test_get_movie_detail_with_reviews_should_return_success(
     response = api_client.get(path=url)
     assert response.status_code == status.HTTP_200_OK
 
-    # Assertion: Check that reviews information in the response matches the expected data
-    # Fetch the expected movie details using the same function as the API
+    # Assertion: Check that reviews information in the response matches
+    # the expected data Fetch the expected movie details using the same
+    # function as the API
     test_movie = get_movie_detail(movie_slug=test_movie_without_cast_crew.slug)
 
     # Serialize the expected movie data with reviews

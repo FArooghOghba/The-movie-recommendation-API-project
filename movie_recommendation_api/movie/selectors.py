@@ -42,8 +42,8 @@ def get_movie_detail(*, movie_slug: str, user: get_user_model() = None) -> Movie
     Retrieve detailed information about a specific movie by its slug.
 
     This function retrieves the detailed representation of a movie based on its slug.
-    It includes information such as the movie's genres, cast and crew members, reviews,
-    average rating, total number of ratings, total number of reviews and
+    It includes information such as the movie's genres, cast and crew members,
+    reviews, average rating, total number of ratings, total number of reviews and
     the user's rating if authenticated.
 
     :param movie_slug: (str): The slug of the movie to retrieve.
