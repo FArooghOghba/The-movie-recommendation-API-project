@@ -4,7 +4,7 @@ from .models import BaseUser, Profile
 
 
 def create_profile(
-    *, user: BaseUser, first_name: str | None, last_name: str | None, bio: str | None
+    *, user: BaseUser, first_name: str | None = None, last_name: str | None = None, bio: str | None = None
 ) -> Profile:
 
     """
@@ -45,7 +45,7 @@ def create_user(*, username: str, email: str, password: str) -> BaseUser:
 @transaction.atomic
 def register(
     *, username: str, email: str, password: str,
-    first_name: str | None, last_name: str | None, bio: str | None
+    first_name: str | None = None, last_name: str | None = None, bio: str | None = None
 ) -> BaseUser:
 
     """
