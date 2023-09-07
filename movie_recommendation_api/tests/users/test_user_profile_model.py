@@ -58,7 +58,9 @@ def test_create_profile_with_favorite_genres_return_successful(
     test_user_profile = first_test_user.profile
     test_user_profile.favorite_genres.add(first_test_genre, second_test_genre)
 
-    test_user_favorite_genres = list(test_user_profile.favorite_genres.order_by('id'))
+    test_user_favorite_genres = list(
+        test_user_profile.favorite_genres.order_by('id')
+    )
     assert test_user_favorite_genres == [first_test_genre, second_test_genre]
 
 

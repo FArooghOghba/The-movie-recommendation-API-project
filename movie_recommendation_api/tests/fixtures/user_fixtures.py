@@ -4,7 +4,9 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from movie_recommendation_api.users.models import BaseUser
-from movie_recommendation_api.tests.factories.user_factories import BaseUserFactory, ProfileFactory
+from movie_recommendation_api.tests.factories.user_factories import (
+    BaseUserFactory, ProfileFactory
+)
 
 from typing import Callable
 
