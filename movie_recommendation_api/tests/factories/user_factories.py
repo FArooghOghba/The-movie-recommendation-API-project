@@ -4,7 +4,7 @@ Factories for the user tests.
 
 import factory
 
-from movie_recommendation_api.users.models import BaseUser
+from movie_recommendation_api.users.models import BaseUser, Profile
 
 
 class BaseUserFactory(factory.django.DjangoModelFactory):
@@ -46,3 +46,30 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
             'password': 'test_pass0',
             'confirm_password': 'test_pass0',
         }
+
+    @factory.post_generation
+    def profile(self, create, extracted, **kwargs):
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        if extracted:
+            # A profile was passed in, use it
+            self.profile = extracted
+        else:
+            # No profile was passed in, create one
+            ProfileFactory(user=self)
+
+
+class ProfileFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Profile
+
+    user = factory.SubFactory(BaseUserFactory)
+    first_name = factory.Faker('first_name')
+    last_name = factory.Faker('last_name')
+    bio = factory.Faker('text')
+
+    @classmethod
+    def create_profile(cls, user=None):
+        return cls.create(user=user)

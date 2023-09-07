@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from movie_recommendation_api.users.models import BaseUser
-from movie_recommendation_api.tests.factories.user_factories import BaseUserFactory
+from movie_recommendation_api.tests.factories.user_factories import BaseUserFactory, ProfileFactory
 
 from typing import Callable
 
@@ -92,3 +92,19 @@ def third_test_user() -> BaseUserFactory:
     """
 
     return BaseUserFactory()
+
+
+@pytest.fixture
+def first_test_user_profile() -> ProfileFactory:
+    """
+    Fixture for creating a test user profile instance.
+
+    This fixture uses the `ProfileFactory` factory
+    to create a test user profile instance.
+    The created user profile can be used in tests
+    to simulate a user profile with predefined
+    attributes for testing various scenarios.
+    :return: a test user profile instance
+    """
+
+    return ProfileFactory()

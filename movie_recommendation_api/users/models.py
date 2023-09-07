@@ -1,4 +1,6 @@
 """User Model"""
+import os
+import uuid
 
 from django.db import models
 
@@ -136,15 +138,29 @@ class BaseUser(BaseModel, AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-# class Profile(models.Model):
-#     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
-#     first_name = models.CharField(max_length=255, null=True, blank=True)
-#     last_name = models.CharField(max_length=255, null=True, blank=True)
-#     bio = models.CharField(max_length=1000, null=True, blank=True)
-#     favorite_genre = !!!!
-#     watchlist = !!!!!!
-#     ratings = !!!!!!
-#     reviews = !!!!!!
-#
-#     def __str__(self):
-#         return f"{self.user} >> {self.bio}"
+def user_profile_image_file_path(instance, filename):
+    """Generate a file path for new user image."""
+
+    extension = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}{extension}'
+
+    return os.path.join('uploads', 'user_profile_image', filename)
+
+
+class Profile(BaseModel):
+    user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=256, null=True, blank=True)
+    last_name = models.CharField(max_length=256, null=True, blank=True)
+    picture = models.ImageField(
+        upload_to=user_profile_image_file_path,
+        default='user_profile_image/blank-profile-image.png'
+    )
+    bio = models.CharField(max_length=512, null=True, blank=True)
+    favorite_genres = models.ManyToManyField(to='movie.Genre', blank=True)
+    watchlist = models.ManyToManyField(to='movie.Movie', blank=True)
+    ratings = models.ManyToManyField(to='movie.Rating', blank=True)
+    reviews = models.ManyToManyField(to='movie.Review', blank=True)
+    # activity = models.ManyToManyField(to='Activity', blank=True)
+
+    def __str__(self):
+        return f"{self.user} >> {self.first_name} {self.last_name}"
