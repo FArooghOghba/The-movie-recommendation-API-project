@@ -2,6 +2,8 @@
 Factories for the user tests.
 """
 
+from typing import Dict, Optional
+
 import factory
 
 from movie_recommendation_api.users.models import BaseUser, Profile
@@ -31,7 +33,7 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
     password = factory.PostGenerationMethodCall('set_password', 'test_pass0')
 
     @classmethod
-    def create_payload(cls) -> dict:
+    def create_payload(cls) -> Dict[str, str]:
         """
         A class method that generates a payload dictionary for creating
         a user via the API.
@@ -48,7 +50,17 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
         }
 
     @factory.post_generation
-    def profile(self, create, extracted, **kwargs):
+    def profile(self, create: bool, extracted: Optional['Profile'], **kwargs):
+
+        """
+        Post-generation hook to create a related Profile instance for the BaseUser.
+
+        :param create: (bool): Flag indicating whether to create a related Profile.
+        :param extracted: A Profile instance that can be passed in.
+        :param kwargs:
+        :return:
+        """
+
         if not create:
             # Simple build, do nothing.
             return
@@ -62,6 +74,23 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
+    """
+    Factory class for creating instances of the Profile model.
+
+    This factory allows creating Profile instances with associated
+    BaseUser instances.
+
+    Attributes:
+        user (BaseUser): The BaseUser instance associated with the profile.
+        first_name (str): The user's first name.
+        last_name (str): The user's last name.
+        bio (str): A short biography or description of the user.
+
+    Methods:
+        create_profile(cls, user) -> Profile: Creates a Profile instance with
+        an associated BaseUser.
+    """
+
     class Meta:
         model = Profile
 
@@ -71,5 +100,14 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     bio = factory.Faker('text')
 
     @classmethod
-    def create_profile(cls, user=None):
+    def create_profile(cls, user: Optional[BaseUser] = None) -> Profile:
+
+        """
+        Creates a Profile instance with an associated BaseUser.
+
+        :param user: (BaseUser, optional): The BaseUser instance to associate
+        with the profile.
+        :return: Profile: The created Profile instance.
+        """
+
         return cls.create(user=user)

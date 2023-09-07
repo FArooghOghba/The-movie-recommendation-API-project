@@ -139,7 +139,7 @@ class BaseUser(BaseModel, AbstractBaseUser, PermissionsMixin):
 
 
 def user_profile_image_file_path(instance, filename):
-    """Generate a file path for new user image."""
+    """Generate a file path for new user profile image."""
 
     extension = os.path.splitext(filename)[1]
     filename = f'{uuid.uuid4()}{extension}'
@@ -148,6 +148,30 @@ def user_profile_image_file_path(instance, filename):
 
 
 class Profile(BaseModel):
+
+    """
+    Represents a user's profile.
+
+    This model stores additional information about a user, such as their
+    first name, last name, profile picture, biography, favorite genres,
+    watchlist, ratings, and reviews.
+
+    Attributes:
+        user (OneToOneField): A reference to the user associated with this profile.
+        first_name (CharField): The user's first name (optional).
+        last_name (CharField): The user's last name (optional).
+        picture (ImageField): The profile picture of the user.
+        bio (CharField): A short biography or description of the user (optional).
+        favorite_genres (ManyToManyField): The user's favorite movie genres.
+        watchlist (ManyToManyField): Movies added to the user's watchlist.
+        ratings (ManyToManyField): Movie ratings given by the user.
+        reviews (ManyToManyField): Movie reviews written by the user.
+
+    Methods:
+        __str__(self): Returns a string representation of the user's profile.
+
+    """
+
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=256, null=True, blank=True)
     last_name = models.CharField(max_length=256, null=True, blank=True)
