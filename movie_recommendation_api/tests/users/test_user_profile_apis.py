@@ -5,7 +5,9 @@ from django.urls import reverse
 from rest_framework import status
 
 from movie_recommendation_api.users.models import Profile
-from movie_recommendation_api.users.serializers import OutPutProfileModelSerializer
+from movie_recommendation_api.users.serializers.user_profile_serializer import (
+    OutPutProfileModelSerializer
+)
 
 
 pytestmark = pytest.mark.django_db

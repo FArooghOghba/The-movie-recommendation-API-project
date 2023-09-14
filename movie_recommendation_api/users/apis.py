@@ -4,8 +4,10 @@ from rest_framework import status
 
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
 from movie_recommendation_api.api.mixins import ApiAuthMixin
-from movie_recommendation_api.users.serializers import (
-    InputRegisterSerializer, OutPutRegisterModelSerializer,
+from movie_recommendation_api.users.serializers.user_register_serializers import (
+    InputRegisterSerializer, OutPutRegisterModelSerializer
+)
+from movie_recommendation_api.users.serializers.user_profile_serializer import (
     OutPutProfileModelSerializer
 )
 from movie_recommendation_api.users.services import register
