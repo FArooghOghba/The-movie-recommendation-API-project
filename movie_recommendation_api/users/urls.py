@@ -1,5 +1,5 @@
 from django.urls import path
-from .apis import RegisterAPIView
+from .apis import RegisterAPIView, ProfileAPIView
 
 
 app_name = 'users'
@@ -7,5 +7,5 @@ app_name = 'users'
 
 urlpatterns = [
     path('register/', RegisterAPIView.as_view(), name="register"),
-    # path('profile/', ProfileApi.as_view(),name="profile"),
+    path('profile/<str:username>/', ProfileAPIView.as_view(), name="profile"),
 ]

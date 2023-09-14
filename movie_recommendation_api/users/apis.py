@@ -1,13 +1,15 @@
-from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
-# from movie_recommendation_api.api.mixins import ApiAuthMixin
+from movie_recommendation_api.api.exception_handlers import handle_exceptions
+from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.users.serializers import (
-    InputRegisterSerializer, OutPutRegisterModelSerializer
+    InputRegisterSerializer, OutPutRegisterModelSerializer,
+    OutPutProfileModelSerializer
 )
 from movie_recommendation_api.users.services import register
-# from movie_recommendation_api.users.selectors import get_profile
+from movie_recommendation_api.users.selectors import get_profile
 
 from drf_spectacular.utils import extend_schema
 
@@ -41,18 +43,55 @@ class RegisterAPIView(APIView):
         )
 
 
-# class ProfileApi(ApiAuthMixin, APIView):
-#
-#     class OutPutSerializer(serializers.ModelSerializer):
-#         class Meta:
-#             model = Profile
-#             fields = (
-#               "bio", "posts_count", "subscriber_count", "subscription_count"
-#             )
-#
-#     @extend_schema(responses=OutPutSerializer)
-#     def get(self, request):
-#         query = get_profile(user=request.user)
-#         return Response(self.OutPutSerializer(
-#           query, context={"request": request}).data
-#         )
+class ProfileAPIView(ApiAuthMixin, APIView):
+    """
+    API endpoint for retrieving user profiles.
+
+    This view allows users to retrieve their own profiles or view other
+    users' profiles by specifying the target user's username in the URL.
+    It returns information such as the user's first name, last name
+    profile picture, biography, favorite genres, watchlist, ratings,
+    and reviews.
+
+    Attributes:
+        output_serializer (Serializer): The serializer class used for formatting the
+        output data.
+    """
+
+    output_serializer = OutPutProfileModelSerializer
+
+    @extend_schema(responses=OutPutProfileModelSerializer)
+    def get(self, request, username):
+
+        """
+        Get user profile information.
+
+        :param: request (Request): The HTTP request object.
+        :param: username (str): The username of the target user's profile
+        to retrieve.
+
+        :return:
+           Response: The HTTP response containing the user profile data
+           or an error message.
+        """
+
+        if not username:
+            username = request.user.username
+
+        try:
+
+            user_profile = get_profile(username=username)
+
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
+            return Response(
+                data=exception_response.data,
+                status=exception_response.status_code,
+            )
+
+        output_serializer = self.output_serializer(
+            user_profile, context={'request': request}
+        )
+        return Response(output_serializer.data, status=status.HTTP_200_OK)
