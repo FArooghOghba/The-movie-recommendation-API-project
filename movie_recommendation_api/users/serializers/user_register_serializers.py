@@ -7,7 +7,9 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from movie_recommendation_api.users.validators import number_validator, special_char_validator, letter_validator
+from movie_recommendation_api.users.validators import (
+    number_validator, special_char_validator, letter_validator
+)
 
 
 class InputRegisterSerializer(serializers.Serializer):
