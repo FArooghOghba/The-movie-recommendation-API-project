@@ -13,6 +13,36 @@ from movie_recommendation_api.users.serializers.user_profile_serializer import (
 pytestmark = pytest.mark.django_db
 
 
+def movie_rating_url(movie_slug: str) -> str:
+    """
+    Generate the URL for the movie rating API endpoint based on the movie slug.
+
+    This function takes a movie slug as input and generates the URL for the
+    movie rating API endpoint by using the `reverse` function provided by Django's
+    URL resolver. The movie slug is included as a parameter in the URL.
+
+    :param movie_slug: The slug of the movie.
+    :return: The URL for the movie 'rating API' endpoint.
+    """
+    return reverse(viewname='api:movie:rating', args=[movie_slug])
+
+
+def movie_review_url(movie_slug: str) -> str:
+
+    """
+    Generate the URL for the movie review API endpoint based on the movie slug.
+
+    This function takes a movie slug as input and generates the URL for the
+    movie review API endpoint by using the `reverse` function provided by Django's
+    URL resolver. The movie slug is included as a parameter in the URL.
+
+    :param movie_slug: The slug of the movie.
+    :return: The URL for the movie 'review API' endpoint.
+    """
+
+    return reverse(viewname='api:movie:review', args=[movie_slug])
+
+
 def user_profile_url(username: str) -> str:
 
     """
@@ -89,3 +119,109 @@ def test_register_create_user_profile_return_successful(
     response_user_profile_reviews = response.data['reviews']
     test_user_profile_reviews = test_user_profile['reviews']
     assert response_user_profile_reviews == test_user_profile_reviews
+
+
+def test_get_user_profile_updated_when_user_rating_to_movies_return_successful(
+    api_client, first_test_user, first_test_movie,
+    first_test_rating, second_test_rating
+) -> None:
+
+    """
+    Test that adding a movie rating updates the user's profile ratings.
+
+    This test verifies that when a user rates a movie, the user's profile
+    reflects the newly added rating. It adds test ratings to the user's
+    profile, authenticates the user, and then adds a new rating via the API.
+    Finally, it checks that the user's profile correctly reflects the added rating.
+
+    :param api_client: The Django test API client.
+    :param first_test_user: The first test user.
+    :param first_test_movie: The first test movie.
+    :param first_test_rating: The first test rating.
+    :param second_test_rating: The second test rating.
+
+    :return: None
+    """
+
+    test_user_profile = first_test_user.profile
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    # Add data to the user's profile
+    test_user_profile.ratings.add(first_test_rating, second_test_rating)
+
+    # Authenticate the second test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    # Add a new rating via the API
+    url = movie_rating_url(movie_slug=first_test_movie.slug)
+    payload = {'rate': 7}
+
+    rating_response = api_client.post(path=url, data=payload)
+    assert rating_response.status_code == status.HTTP_201_CREATED
+
+    # Check that the user's profile correctly reflects the added rating
+    profile_response = api_client.get(
+        path=test_user_profile_url,
+    )
+    assert profile_response.status_code == status.HTTP_200_OK
+
+    user_profile_ratings = profile_response.data['ratings']
+    assert len(user_profile_ratings) == 3
+
+    rating_added_by_user = user_profile_ratings[0]['user_rating']
+    assert rating_added_by_user == payload['rate']
+
+
+def test_get_user_profile_updated_when_user_review_to_movies_return_successful(
+    api_client, first_test_user, first_test_movie,
+    first_test_review, second_test_review
+) -> None:
+
+    """
+    Test that adding a movie review updates the user's profile reviews.
+
+    This test verifies that when a user writes a movie review, the user's profile
+    reflects the newly added review. It adds test reviews to the user's
+    profile, authenticates the user, and then adds a new review via the API.
+    Finally, it checks that the user's profile correctly reflects the added review.
+
+    :param api_client: The Django test API client.
+    :param first_test_user: The first test user.
+    :param first_test_movie: The first test movie.
+    :param first_test_review: The first test review.
+    :param second_test_review: The second test review.
+
+    :return: None
+    """
+
+    test_user_profile = first_test_user.profile
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    # Add data to the user's profile
+    test_user_profile.reviews.add(first_test_review, second_test_review)
+
+    # Authenticate the second test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    # Add a new review via the API
+    url = movie_review_url(movie_slug=first_test_movie.slug)
+    payload = {'review': 'This is Test user review.'}
+
+    review_response = api_client.post(path=url, data=payload)
+    assert review_response.status_code == status.HTTP_201_CREATED
+
+    # Check that the user's profile correctly reflects the added review
+    profile_response = api_client.get(
+        path=test_user_profile_url,
+    )
+    assert profile_response.status_code == status.HTTP_200_OK
+
+    user_profile_reviews = profile_response.data['reviews']
+    assert len(user_profile_reviews) == 3
+
+    review_added_by_user = user_profile_reviews[0]['content']
+    assert review_added_by_user == payload['review']

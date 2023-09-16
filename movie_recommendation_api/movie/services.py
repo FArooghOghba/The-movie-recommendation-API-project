@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from movie_recommendation_api.movie.models import Movie, Rating, Review
+from movie_recommendation_api.users.models import Profile
 
 
 def get_movie(movie_slug: str) -> Movie:
@@ -29,22 +30,26 @@ def rate_movie(*, user: get_user_model(), movie_slug: str, rate: int) -> Movie:
     the database operations are executed within a single transaction.
     This ensures data integrity and consistency.
 
-    Raises:
+    :raises:
         Movie.DoesNotExist: If the movie with the provided movie_slug
         does not exist in the database.
 
     :param user: (User): The user who is rating the movie.
     :param movie_slug: (str): The unique slug representing the movie being rated.
-    :param rate: (int): The rating value given by the user. Should be an integer
+    :param rate: (int): The rating value given by the user. It Should be an integer
                 between 1 and 10.
     :return: Movie object that has been rated.
     """
 
     movie = get_movie(movie_slug=movie_slug)
 
-    Rating.objects.create(
+    rating = Rating.objects.create(
         user=user, movie=movie, rating=rate
     )
+
+    user_profile = Profile.objects.get(user=user)
+    user_profile.ratings.add(rating)
+
     # cache_profile(user=user)
 
     return movie
@@ -55,6 +60,15 @@ def review_movie(*, user: get_user_model(), movie_slug: str, review: str) -> Mov
     """
     Create a movie review for a specific movie.
 
+    This function creates a movie review for the given user and movie with
+    the provided review content. It first fetches the movie object based on
+    the provided movie_slug and then creates a new Review object with the user,
+    movie, and review data.
+
+    The function is wrapped in a "transaction.atomic" block, ensuring that
+    the database operations are executed within a single transaction.
+    This ensures data integrity and consistency.
+
     :param user: The user who is writing the review (User model instance).
     :param movie_slug: The slug of the movie for which the review is being written.
     :param review: The content of the review.
@@ -63,9 +77,13 @@ def review_movie(*, user: get_user_model(), movie_slug: str, review: str) -> Mov
 
     movie = get_movie(movie_slug=movie_slug)
 
-    Review.objects.create(
+    review = Review.objects.create(
         user=user, movie=movie, content=review
     )
+
+    user_profile = Profile.objects.get(user=user)
+    user_profile.reviews.add(review)
+
     # cache_profile(user=user)
 
     return movie

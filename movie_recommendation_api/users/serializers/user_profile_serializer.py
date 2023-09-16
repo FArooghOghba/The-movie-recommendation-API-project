@@ -68,7 +68,7 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
         :return: list[dict]: A list of movie details in the user's watchlist.
         """
 
-        watchlist_queryset = obj.watchlist.order_by('created_at')
+        watchlist_queryset = obj.watchlist.order_by('-created_at')
 
         watchlist = []
 
@@ -96,7 +96,7 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
         :return: list[dict]: A list of movie ratings and details.
         """
 
-        rating_queryset = obj.ratings.order_by('created_at')
+        rating_queryset = obj.ratings.order_by('-created_at')
 
         ratings = []
 
@@ -126,7 +126,7 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
         :return: list[dict]: A list of movie reviews and details.
         """
 
-        review_queryset = obj.reviews.order_by('created_at')
+        review_queryset = obj.reviews.order_by('-created_at')
 
         reviews = []
 
