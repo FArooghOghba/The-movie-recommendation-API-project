@@ -133,7 +133,11 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
         """
 
         permissions = super().get_permissions()
-        return permissions + [CanRateAfterReleaseDate()]
+
+        if self.request.method == 'POST':
+            permissions.append(CanRateAfterReleaseDate())
+
+        return permissions
 
     @extend_schema(
         request=MovieDetailRatingInPutSerializer,
