@@ -1,7 +1,12 @@
+import os
+
 import pytest
+
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 
+from movie_recommendation_api.users.models import user_profile_image_file_path
 from movie_recommendation_api.users.services import register
 
 
@@ -213,3 +218,34 @@ def test_create_profile_with_existing_username_return_error(
             last_name=last_name,
             bio=bio,
         )
+
+
+@patch(target='movie_recommendation_api.users.models.uuid.uuid4')
+def test_user_profile_picture_create_file_name_uuid_for_image_path(
+    mock_uuid
+) -> None:
+
+    """
+    Test generating the image path for the user profile picture.
+
+    This test mocks the UUID generation using the patch decorator
+    to ensure a consistent UUID value. It calls the user_profile_image_file_path()
+    function with the first_test_user fixture object and a dummy file name.
+    The expected file path is constructed based on the UUID values.
+    The test asserts that the generated file path matches the expected value.
+
+    :param mock_uuid: A mock object for generating UUID values.
+    :return: None
+    """
+
+    uuid = 'test_uuid'
+    mock_uuid.return_value = uuid
+    file_path = user_profile_image_file_path(
+        instance=None, filename='test-user-picture.jpg'
+    )
+
+    expected_file_path = os.path.normpath(
+        f'uploads/user_profile_image/{uuid}.jpg'
+    )
+
+    assert file_path == expected_file_path
