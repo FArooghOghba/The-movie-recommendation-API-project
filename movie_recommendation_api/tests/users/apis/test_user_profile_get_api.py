@@ -151,7 +151,7 @@ def test_get_user_profile_updated_when_user_rating_to_movies_return_successful(
     # Add data to the user's profile
     test_user_profile.ratings.add(first_test_rating, second_test_rating)
 
-    # Authenticate the second test user for the API call
+    # Authenticate the first test user for the API call
     api_client.force_authenticate(user=first_test_user)
 
     # Add a new rating via the API
@@ -204,7 +204,7 @@ def test_get_user_profile_updated_when_user_review_to_movies_return_successful(
     # Add data to the user's profile
     test_user_profile.reviews.add(first_test_review, second_test_review)
 
-    # Authenticate the second test user for the API call
+    # Authenticate the first test user for the API call
     api_client.force_authenticate(user=first_test_user)
 
     # Add a new review via the API

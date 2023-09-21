@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
+from movie_recommendation_api.users.models import Profile
 
 
 class CanRateAfterReleaseDate(permissions.BasePermission):
@@ -53,3 +54,44 @@ class CanRateAfterReleaseDate(permissions.BasePermission):
                 data=exception_response.data,
                 status=exception_response.status_code,
             )
+
+
+class IsOwnerProfilePermissionOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission class for user profile access.
+
+    This permission class restricts access to user profiles, allowing read-only
+    access for unauthenticated users and full access (including updates) only to
+    the owner of the profile.
+
+    Methods:
+        has_object_permission(request, view, profile): Determine if the user has
+        permission to access the given user profile.
+
+    """
+
+    def has_object_permission(
+            self, request: Request, view: APIView, profile: Profile
+    ) -> bool:
+
+        """
+        Check if the user has permission to access the user profile.
+
+        Users are granted read-only access (GET, HEAD, OPTIONS) to all profiles.
+        However, updates are only allowed if the requesting user is the owner
+        of the profile.
+
+        :param request: The incoming HTTP request.
+        :param view: The view requesting access to the profile.
+        :param profile: The user profile being accessed.
+
+        :return: True if the user has permission, False otherwise.
+        """
+
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Allow updates only if the requesting user is the owner of the profile.
+        return profile.user == request.user
