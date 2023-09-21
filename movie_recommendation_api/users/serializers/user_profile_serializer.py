@@ -1,6 +1,44 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.validators import MinLengthValidator
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
 from movie_recommendation_api.users.models import Profile
+
+
+class InPutProfileSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150,
+        validators=[UnicodeUsernameValidator(), MinLengthValidator(5)],
+        required=False,
+    )
+    # first_name = serializers.CharField(max_length=256, required=False)
+    # last_name = serializers.CharField(max_length=256, required=False)
+    # picture = serializers.ImageField(required=False)
+    # bio = serializers.CharField(max_length=512, required=False)
+    # favorite_genres
+    # watchlist
+
+    def validate_username(self, username: str) -> str | ValueError:
+        """
+        Validate the uniqueness of the username.
+
+        This method is called during the validation
+        phase to check if the provided username is
+        unique in the database. If an existing user
+        with the same username is found, a validation
+        error is raised.
+
+        :param username: (str): The username to validate.
+        :return: str: The validated username.
+        :Raises: serializers.ValidationError: If the username is already taken.
+        """
+
+        if get_user_model().objects.filter(username=username).exists():
+            raise serializers.ValidationError(_("username Already Taken"))
+        return username
 
 
 class OutPutProfileModelSerializer(serializers.ModelSerializer):
@@ -32,6 +70,7 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
         get_reviews(obj): Retrieve and format the user's movie reviews.
     """
 
+    username = serializers.ReadOnlyField(source='user.username')
     favorite_genres = serializers.SerializerMethodField()
     watchlist = serializers.SerializerMethodField()
     ratings = serializers.SerializerMethodField()
@@ -40,7 +79,7 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = (
-            "user", "first_name", "last_name",
+            "username", "first_name", "last_name",
             "picture", "bio", "created_at",
             "favorite_genres", "watchlist",
             "ratings", "reviews"
