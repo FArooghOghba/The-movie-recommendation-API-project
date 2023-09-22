@@ -77,25 +77,36 @@ def register(
     return user
 
 
-def update_profile(*, username: str, edited_username: str | None = None) -> Profile:
+@transaction.atomic
+def update_profile(*, username: str, updated_fields: dict) -> Profile:
 
     """
     Update a user's profile information, including the username if provided.
 
     This function retrieves the user and their associated profile based on the
-    provided username. If an `edited_username` is provided, it updates the user's
-    username and saves the changes. Then, it returns the user's profile.
+    provided username. If an 'username' field is included in the 'updated_fields'
+    dictionary, it updates the user's username and saves the changes. Then, it
+    updates other profile fields based on the provided data and returns the
+    user's updated profile.
 
     :param username: (str): The username of the user whose profile to update.
-    :param edited_username: (str | None): The new username to set (optional).
+    :param updated_fields: (dict): A dictionary containing the fields to update
+        and their new values.
     :return: Profile: The updated user profile.
     """
 
     user = BaseUser.objects.get(username=username)
     user_profile = Profile.objects.get(user=user)
 
-    if edited_username is not None:
-        user.username = edited_username
+    if 'username' in updated_fields.keys():
+        user.username = updated_fields['username']
         user.save()
+
+    # Update each field in the profile based on the provided data
+    for field, value in updated_fields.items():
+        if hasattr(user_profile, field):
+            setattr(user_profile, field, value)
+
+    user_profile.save()
 
     return user_profile

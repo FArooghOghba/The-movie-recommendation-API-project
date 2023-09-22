@@ -21,15 +21,61 @@ def user_profile_url(username: str) -> str:
     return reverse(viewname='api:users:profile', args=[username])
 
 
-def test_patch_update_user_profile_for_username_return_successful(
+@pytest.mark.parametrize(
+    'field, edited_value', (
+        ['username', 'edited_username'],
+        ['first_name', 'edited_first_name'],
+        ['last_name', 'edited_last_name'],
+        ['bio', 'edited bio.'],
+    )
+)
+def test_patch_update_user_profile_for_user_info_return_successful(
+    api_client, first_test_user, field, edited_value
+) -> None:
+
+    """
+    Test updating the user profile's field for the authenticated user.
+
+    This test case verifies that an authenticated user can successfully
+    update their own user profile's field
+    (e.g., username, first name, last name, bio) using the PATCH request.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+    :param field: The name of the field to update.
+    :param edited_value: The new value for the field.
+
+    :return: None
+    """
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    payload = {field: edited_value}
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=payload
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.data[field] == payload[field]
+
+
+def test_patch_update_user_profile_for_multiple_user_info_fields_return_successful(
     api_client, first_test_user
 ) -> None:
 
     """
-    Test updating the user profile's username for the authenticated user.
+    Test updating multiple user profile fields for the authenticated user.
 
     This test case verifies that an authenticated user can successfully
-    update their own user profile's username using the PATCH request.
+    update multiple fields of their own user profile
+    (e.g., first name, last name, bio) using the PATCH request.
 
     :param api_client: The Django test client.
     :param first_test_user: The first test user for authentication.
@@ -44,7 +90,11 @@ def test_patch_update_user_profile_for_username_return_successful(
         username=first_test_user.username
     )
 
-    payload = {'username': 'edited_username'}
+    payload = {
+        'first_name': 'edited_first_name',
+        'last_name': 'edited_last_name',
+        'bio': 'new edited bio.',
+    }
 
     response = api_client.patch(
         path=test_user_profile_url,
@@ -52,7 +102,9 @@ def test_patch_update_user_profile_for_username_return_successful(
     )
 
     assert response.status_code == status.HTTP_202_ACCEPTED
-    assert response.data['username'] == payload['username']
+
+    for field, value in payload.items():
+        assert response.data[field] == value
 
 
 # def test_patch_update_user_profile_for_watchlist_return_successful(

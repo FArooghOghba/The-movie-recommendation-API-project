@@ -9,15 +9,37 @@ from movie_recommendation_api.users.models import Profile
 
 
 class InPutProfileSerializer(serializers.Serializer):
+
+    """
+    Serializer for updating user profile information.
+
+    This serializer is used for updating user profile information
+    using the PATCH request. It includes fields such as username,
+    first name, last name, and bio. Each field is optional.
+
+    Attributes:
+        username (serializers.CharField): The username field for the user.
+            It is optional and validated for uniqueness.
+        first_name (serializers.CharField): The first name field for the user.
+            It is optional.
+        last_name (serializers.CharField): The last name field for the user.
+            It is optional.
+        bio (serializers.CharField): The biography field for the user.
+            It is optional.
+
+    Methods:
+        validate_username(username): Validate the uniqueness of the username.
+    """
+
     username = serializers.CharField(
         max_length=150,
         validators=[UnicodeUsernameValidator(), MinLengthValidator(5)],
         required=False,
     )
-    # first_name = serializers.CharField(max_length=256, required=False)
-    # last_name = serializers.CharField(max_length=256, required=False)
+    first_name = serializers.CharField(max_length=256, required=False)
+    last_name = serializers.CharField(max_length=256, required=False)
     # picture = serializers.ImageField(required=False)
-    # bio = serializers.CharField(max_length=512, required=False)
+    bio = serializers.CharField(max_length=512, required=False)
     # favorite_genres
     # watchlist
 

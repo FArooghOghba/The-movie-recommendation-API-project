@@ -148,9 +148,12 @@ class ProfileAPIView(ApiAuthMixin, APIView):
 
         try:
 
+            # Extract the validated data from the serializer
+            updated_fields = serializer.validated_data
+
             user_profile = update_profile(
                 username=username,
-                edited_username=serializer.validated_data.get("username"),
+                updated_fields=updated_fields,
             )
 
             # Check object-level permissions
