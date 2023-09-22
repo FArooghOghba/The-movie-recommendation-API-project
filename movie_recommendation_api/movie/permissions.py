@@ -3,9 +3,8 @@ from datetime import date
 from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.request import Request
-from rest_framework.response import Response
 
-from movie_recommendation_api.api.exception_handlers import handle_exceptions
+from movie_recommendation_api.movie.models import Movie
 from movie_recommendation_api.users.models import Profile
 
 
@@ -23,37 +22,36 @@ class CanRateAfterReleaseDate(permissions.BasePermission):
         rate the movie.
     """
 
-    def has_permission(self, request: Request, view: APIView) -> bool | Response:
+    def has_object_permission(
+            self, request: Request, view: APIView, movie: Movie
+    ) -> bool:
+
         """
         Checks if the user has permission to rate the movie.
 
-        This method retrieves the movie object from the view using the `get_object`
-        method and checks if the current date is greater than or equal to the release
-        date of the movie. If it is, it returns `True` to indicate that the user has
-        permission to rate the movie. Otherwise, it returns `False` to indicate that
+        This method retrieves the movie object and checks if the current date is
+        greater than or equal to the release date of the movie.
+        If it is, it returns `True` to indicate that the user has permission
+        to rate the movie. Otherwise, it returns `False` to indicate that
         the user does not have permission to rate the movie.
 
         :param request: The request object.
         :param view: The view object.
+        :param movie: The movie being accessed.
+
         :return: `True` if the user has permission to rate the movie,
         `False` otherwise.
         """
 
-        try:
-            movie = view.get_object()
-            release_date = movie.release_date
-            current_date = date.today()
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
-            return current_date >= release_date
+        release_date = movie.release_date
+        current_date = date.today()
 
-        except Exception as exc:
-            exception_response = handle_exceptions(
-                exc=exc, ctx={"request": request, "view": self}
-            )
-            return Response(
-                data=exception_response.data,
-                status=exception_response.status_code,
-            )
+        return current_date >= release_date
 
 
 class IsOwnerProfilePermissionOrReadOnly(permissions.BasePermission):

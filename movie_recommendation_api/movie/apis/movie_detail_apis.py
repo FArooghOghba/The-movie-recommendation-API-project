@@ -6,13 +6,12 @@ from rest_framework import status
 
 from drf_spectacular.utils import extend_schema
 
-from movie_recommendation_api.movie.models import Movie
 from movie_recommendation_api.movie.serializers.movie_detail_serializers import (
     MovieDetailRatingInPutSerializer, MovieDetailReviewInPutSerializer,
     MovieDetailOutPutModelSerializer
 )
 from movie_recommendation_api.movie.services import rate_movie, review_movie
-from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_obj
+from movie_recommendation_api.movie.selectors import get_movie_detail
 from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
 from movie_recommendation_api.movie.permissions import CanRateAfterReleaseDate
@@ -36,17 +35,6 @@ class MovieDetailAPIView(ApiAuthMixin, APIView):
     """
 
     movie_output_serializer = MovieDetailOutPutModelSerializer
-
-    def get_object(self) -> Movie:
-        """
-        Retrieves the movie object based on the provided movie slug.
-
-        :return: The retrieved movie object.
-        """
-
-        movie_slug = self.kwargs.get('movie_slug')
-        movie = get_movie_obj(movie_slug=movie_slug)
-        return movie
 
     @extend_schema(
         responses=MovieDetailOutPutModelSerializer,
@@ -109,17 +97,6 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
     movie_input_serializer = MovieDetailRatingInPutSerializer
     movie_output_serializer = MovieDetailOutPutModelSerializer
 
-    def get_object(self) -> Movie:
-        """
-        Retrieves the movie object based on the provided movie slug.
-
-        :return: The retrieved movie object.
-        """
-
-        movie_slug = self.kwargs.get('movie_slug')
-        movie = get_movie_obj(movie_slug=movie_slug)
-        return movie
-
     def get_permissions(self) -> Sequence[Any] | Any:
         """
         Retrieves the permission classes for the current request.
@@ -180,6 +157,9 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
 
             rated_movie = get_movie_detail(movie_slug=movie_slug, user=user)
 
+            # Check object-level permissions
+            self.check_object_permissions(request, rated_movie)
+
         except Exception as exc:
             exception_response = handle_exceptions(
                 exc=exc, ctx={"request": request, "view": self}
@@ -212,17 +192,6 @@ class MovieDetailReviewAPIView(ApiAuthMixin, APIView):
 
     movie_input_serializer = MovieDetailReviewInPutSerializer
     movie_output_serializer = MovieDetailOutPutModelSerializer
-
-    def get_object(self) -> Movie:
-        """
-        Retrieves the movie object based on the provided movie slug.
-
-        :return: The retrieved movie object.
-        """
-
-        movie_slug = self.kwargs.get('movie_slug')
-        movie = get_movie_obj(movie_slug=movie_slug)
-        return movie
 
     @extend_schema(
         request=MovieDetailReviewInPutSerializer,
