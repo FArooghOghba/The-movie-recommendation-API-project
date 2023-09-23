@@ -110,3 +110,19 @@ def first_test_user_profile() -> ProfileFactory:
     """
 
     return ProfileFactory()
+
+
+@pytest.fixture
+def first_test_picture_payload() -> dict:
+    """
+    Fixture for creating a test user profile picture instance.
+
+    This fixture uses the `ProfileFactory` factory
+    to create a test user profile picture instance.
+    The created picture can be used in tests to simulate
+    a picture with predefined attributes for testing various scenarios.
+
+    :return: a dict test user profile picture payload
+    """
+
+    return ProfileFactory.create_image_file_payload()

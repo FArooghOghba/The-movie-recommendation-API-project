@@ -84,6 +84,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
         user (BaseUser): The BaseUser instance associated with the profile.
         first_name (str): The user's first name.
         last_name (str): The user's last name.
+        picture (ImageField): The user's profile picture.
         bio (str): A short biography or description of the user.
 
     Methods:
@@ -97,6 +98,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(BaseUserFactory)
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
+    picture = factory.django.ImageField(color='blue')
     bio = factory.Faker('text')
 
     @classmethod
@@ -111,3 +113,18 @@ class ProfileFactory(factory.django.DjangoModelFactory):
         """
 
         return cls.create(user=user)
+
+    @classmethod
+    def create_image_file_payload(cls) -> Dict[str, str]:
+        """
+        A class method that generates a payload dictionary for creating
+        a user profile picture via the API.
+
+        :return: generate a payload dictionary with consistent value
+        for creating user profile picture via the API.
+        """
+
+        test_image_file = cls.build()
+        return {
+            'picture': test_image_file.picture,
+        }

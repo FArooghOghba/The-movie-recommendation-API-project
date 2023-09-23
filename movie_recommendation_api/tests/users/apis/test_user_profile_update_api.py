@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from movie_recommendation_api.users.models import Profile
 
 pytestmark = pytest.mark.django_db
 
@@ -64,6 +65,43 @@ def test_patch_update_user_profile_for_user_info_return_successful(
 
     assert response.status_code == status.HTTP_202_ACCEPTED
     assert response.data[field] == payload[field]
+
+
+def test_patch_update_user_profile_picture_return_successful(
+    api_client, first_test_user, first_test_picture_payload
+) -> None:
+
+    """
+    Test updating the user profile's picture for the authenticated user.
+
+    This test case verifies that an authenticated user can successfully
+    update their own user profile's picture using the PATCH request.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+    :param first_test_picture_payload (dict): A dictionary containing
+    the picture data.
+
+    :return: None
+    """
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=first_test_picture_payload
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    test_user_profile = Profile.objects.get(user=first_test_user)
+    test_user_profile_picture = f'http://testserver{test_user_profile.picture.url}'
+    assert response.data['picture'] == test_user_profile_picture
 
 
 def test_patch_update_user_profile_for_multiple_user_info_fields_return_successful(

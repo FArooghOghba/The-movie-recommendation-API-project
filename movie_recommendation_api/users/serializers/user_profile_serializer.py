@@ -24,6 +24,8 @@ class InPutProfileSerializer(serializers.Serializer):
             It is optional.
         last_name (serializers.CharField): The last name field for the user.
             It is optional.
+        picture (serializers.ImageField): The picture field for the user.
+            It is optional.
         bio (serializers.CharField): The biography field for the user.
             It is optional.
 
@@ -38,7 +40,7 @@ class InPutProfileSerializer(serializers.Serializer):
     )
     first_name = serializers.CharField(max_length=256, required=False)
     last_name = serializers.CharField(max_length=256, required=False)
-    # picture = serializers.ImageField(required=False)
+    picture = serializers.ImageField(required=False)
     bio = serializers.CharField(max_length=512, required=False)
     # favorite_genres
     # watchlist
