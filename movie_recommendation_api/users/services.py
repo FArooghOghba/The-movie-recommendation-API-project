@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from .models import BaseUser, Profile
+from ..movie.selectors import get_movie_obj
 
 
 def create_profile(
@@ -84,10 +85,13 @@ def update_profile(*, username: str, updated_fields: dict) -> Profile:
     Update a user's profile information, including the username if provided.
 
     This function retrieves the user and their associated profile based on the
-    provided username. If an 'username' field is included in the 'updated_fields'
+    provided username. If a 'username' field is included in the 'updated_fields'
     dictionary, it updates the user's username and saves the changes. Then, it
     updates other profile fields based on the provided data and returns the
     user's updated profile.
+
+    If 'watchlist' is included in the 'updated_fields' dictionary, it adds a new
+    movie to the user's watchlist based on the provided movie slug.
 
     :param username: (str): The username of the user whose profile to update.
     :param updated_fields: (dict): A dictionary containing the fields to update
@@ -102,9 +106,18 @@ def update_profile(*, username: str, updated_fields: dict) -> Profile:
         user.username = updated_fields['username']
         user.save()
 
+    # Handle updating the watchlist separately
+    if 'watchlist' in updated_fields:
+        new_movie_slug = updated_fields['watchlist']
+
+        new_movie = get_movie_obj(movie_slug=new_movie_slug)
+
+        # Add the new movie to the watchlist
+        user_profile.watchlist.add(new_movie)
+
     # Update each field in the profile based on the provided data
     for field, value in updated_fields.items():
-        if hasattr(user_profile, field):
+        if hasattr(user_profile, field) and field != 'watchlist':
             setattr(user_profile, field, value)
 
     user_profile.save()

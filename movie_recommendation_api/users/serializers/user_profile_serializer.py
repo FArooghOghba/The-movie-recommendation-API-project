@@ -42,8 +42,8 @@ class InPutProfileSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=256, required=False)
     picture = serializers.ImageField(required=False)
     bio = serializers.CharField(max_length=512, required=False)
+    watchlist = serializers.CharField(max_length=256, required=False)
     # favorite_genres
-    # watchlist
 
     def validate_username(self, username: str) -> str | ValueError:
         """

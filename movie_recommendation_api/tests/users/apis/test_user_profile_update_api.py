@@ -145,53 +145,72 @@ def test_patch_update_user_profile_for_multiple_user_info_fields_return_successf
         assert response.data[field] == value
 
 
-# def test_patch_update_user_profile_for_watchlist_return_successful(
-#     api_client, first_test_user, first_test_movie, second_test_movie,
-#     third_test_movie
-# ) -> None:
-#
-#     """
-#
-#     """
-#
-#     # Add data to the user's profile
-#     test_user_profile = first_test_user.profile
-#     test_user_profile.watchlist.add(first_test_movie, second_test_movie)
-#
-#     # Authenticate the first test user for the API call
-#     api_client.force_authenticate(user=first_test_user)
-#
-#     test_user_profile_url = user_profile_url(
-#         username=first_test_user.username
-#     )
-#
-#     payload = {'watchlist': third_test_movie.slug}
-#
-#     response = api_client.patch(
-#         path=test_user_profile_url,
-#         data=payload
-#     )
-#     assert response.status_code == status.HTTP_202_ACCEPTED
-#
-#     user_profile_watchlist = response.data['watchlist']
-#     assert len(user_profile_watchlist) == 3
-#
-#     movie_added_by_user = user_profile_watchlist[0]['slug']
-#     assert movie_added_by_user == payload['watchlist']
-
-
-def test_patch_update_user_profile_for_unauthenticated_user_return_error(
-    api_client, first_test_user
+def test_patch_update_user_profile_for_watchlist_return_successful(
+    api_client, first_test_user, first_test_movie, second_test_movie,
+    third_test_movie
 ) -> None:
 
     """
-    Test updating the user profile's username by an unauthenticated user.
+    Test updating the user's profile watchlist successfully.
+
+    This test case verifies that an authenticated user can successfully
+    update their own user profile's watchlist by adding a movie using
+    the PATCH request.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+    :param first_test_movie: The first test movie.
+    :param second_test_movie: The second test movie.
+    :param third_test_movie: The third test movie.
+
+    :return: None
+    """
+
+    # Add data to the user's profile
+    test_user_profile = first_test_user.profile
+    test_user_profile.watchlist.add(first_test_movie, second_test_movie)
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    payload = {'watchlist': third_test_movie.slug}
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=payload
+    )
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    user_profile_watchlist = response.data['watchlist']
+    assert len(user_profile_watchlist) == 3
+
+    movie_added_by_user = user_profile_watchlist[2]['movie_title']
+    assert movie_added_by_user == first_test_movie.title
+
+
+@pytest.mark.parametrize(
+    'payload', (
+        {'username': 'edited_username'},
+        {'watchlist': 'first_test_movie'},
+    )
+)
+def test_patch_update_user_profile_for_unauthenticated_user_return_error(
+    api_client, request, first_test_user, payload
+) -> None:
+
+    """
+    Test updating the user profile's username or watchlist by an unauthenticated user.
 
     This test case verifies that an unauthenticated user attempting to update
-    their user profile's username will result in an unauthorized error.
+    their user profile's username or watchlist will result in an unauthorized error.
 
     :param api_client: The Django test client.
     :param first_test_user: The first test user.
+    :param payload: The payload containing the fields to update.
 
     :return: None
     """
@@ -200,7 +219,11 @@ def test_patch_update_user_profile_for_unauthenticated_user_return_error(
         username=first_test_user.username
     )
 
-    payload = {'username': 'edited_username'}
+    for key, value in payload.items():
+        if key in ['watchlist']:
+            # Get the object from the fixture name and add its name
+            get_test_fixture = request.getfixturevalue(value)
+            payload[key] = get_test_fixture.slug
 
     response = api_client.patch(
         path=test_user_profile_url,
@@ -210,19 +233,26 @@ def test_patch_update_user_profile_for_unauthenticated_user_return_error(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+@pytest.mark.parametrize(
+    'payload', (
+        {'username': 'edited_username'},
+        {'watchlist': 'first_test_movie'}
+    )
+)
 def test_patch_update_user_profile_for_username_with_different_user_return_error(
-    api_client, first_test_user, second_test_user
+    api_client, request, first_test_user, second_test_user, payload
 ) -> None:
 
     """
-    Test updating another user's profile's username.
+    Test updating another user's profile's username or watchlist.
 
     This test case verifies that an authenticated user cannot update the
-    username of another user's profile and will result in a forbidden error.
+    username or watchlist of another user's profile and will result in a forbidden error.
 
     :param api_client: The Django test client.
     :param first_test_user: The first test user for authentication.
     :param second_test_user: The second test user whose profile is being updated.
+    :param payload: The payload containing the fields to update.
 
     :return: None
     """
@@ -234,7 +264,11 @@ def test_patch_update_user_profile_for_username_with_different_user_return_error
         username=second_test_user.username
     )
 
-    payload = {'username': 'edited_username'}
+    for key, value in payload.items():
+        if key in ['watchlist']:
+            # Get the object from the fixture name and add its name
+            get_test_fixture = request.getfixturevalue(value)
+            payload[key] = get_test_fixture.slug
 
     response = api_client.patch(
         path=test_user_profile_url,
