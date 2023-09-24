@@ -1,7 +1,7 @@
 from django.db import transaction
 
 from .models import BaseUser, Profile
-from ..movie.selectors import get_movie_obj
+from ..movie.selectors import get_genre_obj, get_movie_obj
 
 
 def create_profile(
@@ -92,6 +92,9 @@ def update_profile(*, username: str, updated_fields: dict) -> Profile:
 
     If 'watchlist' is included in the 'updated_fields' dictionary, it adds a new
     movie to the user's watchlist based on the provided movie slug.
+    If 'favorite_genres' is included in the 'updated_fields' dictionary,
+    it adds a new genre to the user's favorite_genres based on the provided
+    genre slug.
 
     :param username: (str): The username of the user whose profile to update.
     :param updated_fields: (dict): A dictionary containing the fields to update
@@ -115,9 +118,20 @@ def update_profile(*, username: str, updated_fields: dict) -> Profile:
         # Add the new movie to the watchlist
         user_profile.watchlist.add(new_movie)
 
+    # Handle updating the favorite genres separately
+    if 'favorite_genres' in updated_fields:
+        new_genre_slug = updated_fields['favorite_genres']
+
+        new_genre = get_genre_obj(genre_slug=new_genre_slug)
+
+        # Add the new genre to the watchlist
+        user_profile.favorite_genres.add(new_genre)
+
     # Update each field in the profile based on the provided data
     for field, value in updated_fields.items():
-        if hasattr(user_profile, field) and field != 'watchlist':
+        if hasattr(user_profile, field) and \
+                field not in ['watchlist', 'favorite_genres']:
+
             setattr(user_profile, field, value)
 
     user_profile.save()

@@ -188,14 +188,62 @@ def test_patch_update_user_profile_for_watchlist_return_successful(
     user_profile_watchlist = response.data['watchlist']
     assert len(user_profile_watchlist) == 3
 
-    movie_added_by_user = user_profile_watchlist[2]['movie_title']
-    assert movie_added_by_user == first_test_movie.title
+    movie_added_by_user = user_profile_watchlist[0]['movie_title']
+    assert movie_added_by_user == third_test_movie.title
+
+
+def test_patch_update_user_profile_for_favorite_genres_return_successful(
+    api_client, first_test_user, first_test_genre, second_test_genre,
+    third_test_genre
+) -> None:
+
+    """
+    Test updating the user's profile favorite_genres successfully.
+
+    This test case verifies that an authenticated user can successfully
+    update their own user profile's favorite_genres by adding a genre using
+    the PATCH request.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+    :param first_test_genre: The first test genre.
+    :param second_test_genre: The second test genre.
+    :param third_test_genre: The third test genre.
+
+    :return: None
+    """
+
+    # Add data to the user's profile
+    test_user_profile = first_test_user.profile
+    test_user_profile.favorite_genres.add(first_test_genre, second_test_genre)
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    payload = {'favorite_genres': third_test_genre.slug}
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=payload
+    )
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    user_profile_favorite_genres = response.data['favorite_genres']
+    assert len(user_profile_favorite_genres) == 3
+
+    genre_added_by_user = user_profile_favorite_genres[2]
+    assert genre_added_by_user == third_test_genre.title
 
 
 @pytest.mark.parametrize(
     'payload', (
         {'username': 'edited_username'},
         {'watchlist': 'first_test_movie'},
+        {'favorite_genres': 'first_test_genre'},
     )
 )
 def test_patch_update_user_profile_for_unauthenticated_user_return_error(
@@ -203,10 +251,12 @@ def test_patch_update_user_profile_for_unauthenticated_user_return_error(
 ) -> None:
 
     """
-    Test updating the user profile's username or watchlist by an unauthenticated user.
+    Test updating the user profile's username, watchlist or favorite genres
+    by an unauthenticated user.
 
     This test case verifies that an unauthenticated user attempting to update
-    their user profile's username or watchlist will result in an unauthorized error.
+    their user profile's username, watchlist or favorite genre will result
+    in an unauthorized error.
 
     :param api_client: The Django test client.
     :param first_test_user: The first test user.
@@ -220,7 +270,7 @@ def test_patch_update_user_profile_for_unauthenticated_user_return_error(
     )
 
     for key, value in payload.items():
-        if key in ['watchlist']:
+        if key in ['watchlist', 'favorite_genres']:
             # Get the object from the fixture name and add its name
             get_test_fixture = request.getfixturevalue(value)
             payload[key] = get_test_fixture.slug
@@ -236,7 +286,8 @@ def test_patch_update_user_profile_for_unauthenticated_user_return_error(
 @pytest.mark.parametrize(
     'payload', (
         {'username': 'edited_username'},
-        {'watchlist': 'first_test_movie'}
+        {'watchlist': 'first_test_movie'},
+        {'favorite_genres': 'first_test_genre'},
     )
 )
 def test_patch_update_user_profile_for_username_with_different_user_return_error(
@@ -244,10 +295,11 @@ def test_patch_update_user_profile_for_username_with_different_user_return_error
 ) -> None:
 
     """
-    Test updating another user's profile's username or watchlist.
+    Test updating another user's profile's username, watchlist or favorite genres.
 
     This test case verifies that an authenticated user cannot update the
-    username or watchlist of another user's profile and will result in a forbidden error.
+    username, watchlist or favorite genres of another user's profile and
+    will result in a forbidden error.
 
     :param api_client: The Django test client.
     :param first_test_user: The first test user for authentication.
@@ -265,7 +317,7 @@ def test_patch_update_user_profile_for_username_with_different_user_return_error
     )
 
     for key, value in payload.items():
-        if key in ['watchlist']:
+        if key in ['watchlist', 'favorite_genres']:
             # Get the object from the fixture name and add its name
             get_test_fixture = request.getfixturevalue(value)
             payload[key] = get_test_fixture.slug

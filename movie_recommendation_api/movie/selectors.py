@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch, QuerySet
 from django.db.models.aggregates import Avg
 
-from movie_recommendation_api.movie.models import Movie, Rating, Review, Role
+from movie_recommendation_api.movie.models import Genre, Movie, Rating, Review, Role
 from movie_recommendation_api.movie.filters import MovieFilterSet
 
 
@@ -127,3 +127,18 @@ def get_movie_obj(*, movie_slug: str) -> Movie:
 
     movie_obj = Movie.objects.get(slug=movie_slug)
     return movie_obj
+
+
+def get_genre_obj(*, genre_slug: str) -> Genre:
+    """
+    Retrieves a genre object based on the provided genre slug.
+
+    This function takes a genre slug as an input parameter and retrieves the
+    corresponding genre object from the database using the Django ORM.
+
+    :param genre_slug: The slug of the genre to retrieve.
+    :return: The retrieved genre object.
+    """
+
+    genre_obj = Genre.objects.get(slug=genre_slug)
+    return genre_obj

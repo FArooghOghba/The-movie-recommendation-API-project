@@ -15,7 +15,8 @@ class InPutProfileSerializer(serializers.Serializer):
 
     This serializer is used for updating user profile information
     using the PATCH request. It includes fields such as username,
-    first name, last name, and bio. Each field is optional.
+    first name, last name, bio, watchlist, and favorite_genres.
+    Each field is optional.
 
     Attributes:
         username (serializers.CharField): The username field for the user.
@@ -28,6 +29,10 @@ class InPutProfileSerializer(serializers.Serializer):
             It is optional.
         bio (serializers.CharField): The biography field for the user.
             It is optional.
+        watchlist (serializers.CharField): The watchlist field for the user.
+            It is optional.
+        favorite genres (serializers.CharField): The favorite genres field
+            for the user. It is optional.
 
     Methods:
         validate_username(username): Validate the uniqueness of the username.
@@ -43,7 +48,7 @@ class InPutProfileSerializer(serializers.Serializer):
     picture = serializers.ImageField(required=False)
     bio = serializers.CharField(max_length=512, required=False)
     watchlist = serializers.CharField(max_length=256, required=False)
-    # favorite_genres
+    favorite_genres = serializers.CharField(max_length=256, required=False)
 
     def validate_username(self, username: str) -> str | ValueError:
         """
