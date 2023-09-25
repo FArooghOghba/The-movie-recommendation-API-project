@@ -328,3 +328,51 @@ def test_patch_update_user_profile_for_username_with_different_user_return_error
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.parametrize(
+    'payload', (
+        {'favorite_genres': 'wrong genre slug'},
+        {'watchlist': 'wrong movie slug'},
+    )
+)
+def test_patch_update_user_profile_with_wrong_slug_for_genres_and_movie_return_error(
+    api_client, first_test_user, first_test_genre, second_test_genre,
+    first_test_movie, second_test_movie, payload
+) -> None:
+
+    """
+    Test updating the user profile with incorrect genre and movie slugs.
+
+    This test case verifies that when an authenticated user attempts to update
+    their user profile with incorrect genre and movie slugs in the payload, it
+    results in a 404 Not Found error.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+    :param first_test_genre: The first test genre for adding to the user's profile.
+    :param second_test_genre: The second test genre for adding to the user's profile.
+    :param first_test_movie: The first test movie for adding to the user's profile.
+    :param second_test_movie: The second test movie for adding to the user's profile.
+    :param payload: The payload with incorrect genre or movie slugs.
+
+    :return: None
+    """
+
+    # Add data to the user's profile
+    test_user_profile = first_test_user.profile
+    test_user_profile.favorite_genres.add(first_test_genre, second_test_genre)
+    test_user_profile.watchlist.add(first_test_movie, second_test_movie)
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=payload
+    )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
