@@ -15,7 +15,9 @@ from movie_recommendation_api.users.serializers.user_register_serializers import
 from movie_recommendation_api.users.serializers.user_profile_serializer import (
     InPutProfileSerializer, OutPutProfileModelSerializer
 )
-from movie_recommendation_api.users.services import register, update_profile
+from movie_recommendation_api.users.services import (
+    register, update_profile_fields
+)
 from movie_recommendation_api.users.selectors import get_profile
 
 from drf_spectacular.utils import extend_schema
@@ -151,7 +153,7 @@ class ProfileAPIView(ApiAuthMixin, APIView):
             # Extract the validated data from the serializer
             updated_fields = serializer.validated_data
 
-            user_profile = update_profile(
+            user_profile = update_profile_fields(
                 username=username,
                 updated_fields=updated_fields,
             )

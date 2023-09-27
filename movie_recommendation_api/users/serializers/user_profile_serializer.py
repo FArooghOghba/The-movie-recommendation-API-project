@@ -43,10 +43,10 @@ class InPutProfileSerializer(serializers.Serializer):
         validators=[UnicodeUsernameValidator(), MinLengthValidator(5)],
         required=False,
     )
-    first_name = serializers.CharField(max_length=256, required=False)
-    last_name = serializers.CharField(max_length=256, required=False)
-    picture = serializers.ImageField(required=False)
-    bio = serializers.CharField(max_length=512, required=False)
+    first_name = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    last_name = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    picture = serializers.ImageField(allow_null=True, required=False)
+    bio = serializers.CharField(max_length=512, allow_blank=True, required=False)
     watchlist = serializers.CharField(max_length=256, required=False)
     favorite_genres = serializers.CharField(max_length=256, required=False)
 

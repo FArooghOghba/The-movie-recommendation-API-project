@@ -6,6 +6,7 @@ from rest_framework import status
 
 from movie_recommendation_api.users.models import Profile
 
+
 pytestmark = pytest.mark.django_db
 
 
@@ -23,15 +24,18 @@ def user_profile_url(username: str) -> str:
 
 
 @pytest.mark.parametrize(
-    'field, edited_value', (
-        ['username', 'edited_username'],
-        ['first_name', 'edited_first_name'],
-        ['last_name', 'edited_last_name'],
-        ['bio', 'edited bio.'],
+    'payload', (
+        {'username': 'edited_username'},
+        {'first_name': 'edited_first_name'},
+        {'first_name': ''},
+        {'last_name': 'edited_last_name'},
+        {'last_name': ''},
+        {'bio': 'edited bio.'},
+        {'bio': ''},
     )
 )
 def test_patch_update_user_profile_for_user_info_return_successful(
-    api_client, first_test_user, field, edited_value
+    api_client, first_test_user, payload
 ) -> None:
 
     """
@@ -43,8 +47,7 @@ def test_patch_update_user_profile_for_user_info_return_successful(
 
     :param api_client: The Django test client.
     :param first_test_user: The first test user for authentication.
-    :param field: The name of the field to update.
-    :param edited_value: The new value for the field.
+    :param payload: The payload containing the fields to update.
 
     :return: None
     """
@@ -56,14 +59,14 @@ def test_patch_update_user_profile_for_user_info_return_successful(
         username=first_test_user.username
     )
 
-    payload = {field: edited_value}
-
     response = api_client.patch(
         path=test_user_profile_url,
         data=payload
     )
 
     assert response.status_code == status.HTTP_202_ACCEPTED
+
+    field = list(payload.keys())[0]
     assert response.data[field] == payload[field]
 
 
@@ -99,9 +102,58 @@ def test_patch_update_user_profile_picture_return_successful(
 
     assert response.status_code == status.HTTP_202_ACCEPTED
 
+    # Get the user's updated profile and the URL of their profile picture
     test_user_profile = Profile.objects.get(user=first_test_user)
     test_user_profile_picture = f'http://testserver{test_user_profile.picture.url}'
+
+    # Check if the response contains the correct URL for the updated profile picture
     assert response.data['picture'] == test_user_profile_picture
+
+
+def test_patch_update_user_profile_for_remove_picture_return_successful(
+    api_client, first_test_user
+) -> None:
+
+    """
+    Test removing the user profile's picture for an authenticated user.
+
+    This test verifies that an authenticated user can successfully remove
+    their own user profile's picture using the PATCH request.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+
+    :return: None
+    """
+
+    test_user_profile = first_test_user.profile
+    test_user_profile_picture = f'http://testserver{test_user_profile.picture.url}'
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    payload = {'picture': ''}
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=payload
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    # Get the user's updated profile and the URL of their profile picture after removal
+    test_user_profile = Profile.objects.get(user=first_test_user)
+    test_user_updated_profile_picture = f'http://testserver{test_user_profile.picture.url}'
+
+    # Check if the response contains the correct URL for the updated profile picture
+    assert response.data['picture'] == test_user_updated_profile_picture
+
+    # Verify that the updated profile picture URL is different from the original one
+    assert response.data['picture'] != test_user_profile_picture
 
 
 def test_patch_update_user_profile_for_multiple_user_info_fields_return_successful(
