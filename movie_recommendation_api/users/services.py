@@ -92,10 +92,14 @@ def update_profile_fields(*, username: str, updated_fields: dict) -> Profile:
     user's updated profile.
 
     If 'watchlist' is included in the 'updated_fields' dictionary, it adds a new
-    movie to the user's watchlist based on the provided movie slug.
-    If 'favorite_genres' is included in the 'updated_fields' dictionary,
-    it adds a new genre to the user's favorite_genres based on the provided
-    genre slug.
+    movie to the user's watchlist based on the provided movie slug. If the movie
+    is already in the watchlist, it will be removed, and if it's not in the
+    watchlist, it will be added.
+
+    If 'favorite_genres' is included in the 'updated_fields' dictionary, it adds
+    a new genre to the user's favorite_genres based on the provided genre slug.
+    If the genre is already in the favorite genres, it will be removed, and if
+    it's not in the favorites, it will be added.
 
     If 'picture' is included in the 'updated_fields' dictionary with a value of
     None, the user's profile picture is set to the default profile image.
@@ -113,7 +117,8 @@ def update_profile_fields(*, username: str, updated_fields: dict) -> Profile:
         user.username = updated_fields['username']
         user.save()
 
-    # If 'picture' is in validated_data and its value is None, set it to the default picture
+    # If 'picture' is in validated_data and its value is None,
+    # set it to the default picture
     if 'picture' in updated_fields and updated_fields['picture'] is None:
         default_image = SimpleUploadedFile(
             name='user_profile_image/blank-profile-image.png',
@@ -127,16 +132,27 @@ def update_profile_fields(*, username: str, updated_fields: dict) -> Profile:
         new_movie_slug = updated_fields['watchlist']
         new_movie = get_movie_obj(movie_slug=new_movie_slug)
 
-        # Add the new movie to the watchlist
-        user_profile.watchlist.add(new_movie)
+        watchlist_movie_slugs = user_profile.watchlist.values_list('slug', flat=True)
+        if new_movie_slug in watchlist_movie_slugs:
+            # Remove the existed movie from the watchlist.
+            user_profile.watchlist.remove(new_movie)
+        else:
+            # Add the new movie to the watchlist.
+            user_profile.watchlist.add(new_movie)
 
     # Handle updating the favorite genres separately
     if 'favorite_genres' in updated_fields:
         new_genre_slug = updated_fields['favorite_genres']
         new_genre = get_genre_obj(genre_slug=new_genre_slug)
 
-        # Add the new genre to the watchlist
-        user_profile.favorite_genres.add(new_genre)
+        favorite_genre_slugs = (user_profile.favorite_genres
+                                .values_list('slug', flat=True))
+        if new_genre_slug in favorite_genre_slugs:
+            # Remove the existed genre from the favorite genres.
+            user_profile.favorite_genres.remove(new_genre)
+        else:
+            # Add the new genre to the favorite genres
+            user_profile.favorite_genres.add(new_genre)
 
     # Update each field in the profile based on the provided data
     for field, value in updated_fields.items():
@@ -148,11 +164,3 @@ def update_profile_fields(*, username: str, updated_fields: dict) -> Profile:
     user_profile.save()
 
     return user_profile
-
-
-# if movie_slug in watchlist.values_list('slug', flat=True):
-#             # Movie is in watchlist, remove it
-#             user_profile.watchlist.remove(movie_slug)
-#         else:
-#             # Movie is not in watchlist, add it
-#             user_profile.watchlist.add(movie_slug)

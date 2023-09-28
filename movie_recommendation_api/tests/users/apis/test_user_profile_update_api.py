@@ -145,9 +145,11 @@ def test_patch_update_user_profile_for_remove_picture_return_successful(
 
     assert response.status_code == status.HTTP_202_ACCEPTED
 
-    # Get the user's updated profile and the URL of their profile picture after removal
+    # Get the user's updated profile and the URL of their profile picture
+    # after removal
     test_user_profile = Profile.objects.get(user=first_test_user)
-    test_user_updated_profile_picture = f'http://testserver{test_user_profile.picture.url}'
+    test_user_updated_profile_picture = (f'http://testserver'
+                                         f'{test_user_profile.picture.url}')
 
     # Check if the response contains the correct URL for the updated profile picture
     assert response.data['picture'] == test_user_updated_profile_picture
@@ -197,7 +199,7 @@ def test_patch_update_user_profile_for_multiple_user_info_fields_return_successf
         assert response.data[field] == value
 
 
-def test_patch_update_user_profile_for_watchlist_return_successful(
+def test_patch_update_user_profile_for_add_movie_to_watchlist_return_successful(
     api_client, first_test_user, first_test_movie, second_test_movie,
     third_test_movie
 ) -> None:
@@ -240,11 +242,11 @@ def test_patch_update_user_profile_for_watchlist_return_successful(
     user_profile_watchlist = response.data['watchlist']
     assert len(user_profile_watchlist) == 3
 
-    movie_added_by_user = user_profile_watchlist[0]['movie_title']
-    assert movie_added_by_user == third_test_movie.title
+    movie_added_by_user = third_test_movie.title
+    assert movie_added_by_user == user_profile_watchlist[0]['movie_title']
 
 
-def test_patch_update_user_profile_for_favorite_genres_return_successful(
+def test_patch_update_profile_for_add_genre_to_favorite_genres_return_successful(
     api_client, first_test_user, first_test_genre, second_test_genre,
     third_test_genre
 ) -> None:
@@ -287,8 +289,107 @@ def test_patch_update_user_profile_for_favorite_genres_return_successful(
     user_profile_favorite_genres = response.data['favorite_genres']
     assert len(user_profile_favorite_genres) == 3
 
-    genre_added_by_user = user_profile_favorite_genres[2]
-    assert genre_added_by_user == third_test_genre.title
+    genre_added_by_user = third_test_genre.title
+    assert genre_added_by_user in user_profile_favorite_genres
+
+
+def test_update_user_profile_for_remove_movie_from_watchlist_return_successful(
+    api_client, first_test_user, first_test_movie, second_test_movie,
+    third_test_movie
+) -> None:
+
+    """
+    Test removing a movie from the user's watchlist.
+
+    This test case verifies that an authenticated user can successfully
+    remove a movie from their watchlist using the PATCH request.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+    :param first_test_movie: The first test movie added to the watchlist.
+    :param second_test_movie: Another test movie added to the watchlist.
+    :param third_test_movie: The movie to be removed from the watchlist.
+
+    :return: None
+    """
+
+    # Add data to the user's profile
+    test_user_profile = first_test_user.profile
+    test_user_profile.watchlist.add(
+        first_test_movie, second_test_movie, third_test_movie
+    )
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    payload = {'watchlist': third_test_movie.slug}
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=payload
+    )
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    user_profile_response = response.data['watchlist']
+    assert len(user_profile_response) == 2
+
+    user_profile_response_watchlist = [
+        movie['movie_title'] for movie in user_profile_response
+    ]
+    movie_removed_by_user = third_test_movie.title
+    assert movie_removed_by_user not in user_profile_response_watchlist
+
+
+def test_update_user_profile_for_remove_genre_from_favorite_genres_return_successful(
+    api_client, first_test_user, first_test_genre, second_test_genre,
+    third_test_genre
+) -> None:
+
+    """
+    Test removing a genre from the user's favorite genres.
+
+    This test case verifies that an authenticated user can successfully
+    remove a genre from their favorite genres using the PATCH request.
+
+    :param api_client: The Django test client.
+    :param first_test_user: The first test user for authentication.
+    :param first_test_genre: The first test genre added to favorite genres.
+    :param second_test_genre: Another test genre added to favorite genres.
+    :param third_test_genre: The genre to be removed from favorite genres.
+
+    :return: None
+    """
+
+    # Add data to the user's profile
+    test_user_profile = first_test_user.profile
+    test_user_profile.favorite_genres.add(
+        first_test_genre, second_test_genre, third_test_genre
+    )
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    payload = {'favorite_genres': third_test_genre.slug}
+
+    response = api_client.patch(
+        path=test_user_profile_url,
+        data=payload
+    )
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+    user_profile_favorite_genres_response = response.data['favorite_genres']
+    assert len(user_profile_favorite_genres_response) == 2
+
+    genre_removed_by_user = third_test_genre.title
+    assert genre_removed_by_user not in user_profile_favorite_genres_response
 
 
 @pytest.mark.parametrize(
