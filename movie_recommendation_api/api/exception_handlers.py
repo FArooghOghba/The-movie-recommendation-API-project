@@ -48,7 +48,7 @@ def handle_exceptions(
         exc = exceptions.PermissionDenied()
 
     if isinstance(exc, ObjectDoesNotExist):
-        exc = exceptions.NotFound("Movie not found.")
+        exc = exceptions.NotFound(f"Not Found - {exc}")
 
     if isinstance(exc, NotAuthenticated):
         exc = exceptions.NotAuthenticated("You are not authenticated.")
