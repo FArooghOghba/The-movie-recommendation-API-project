@@ -5,7 +5,7 @@ from rest_framework import permissions
 from rest_framework.request import Request
 
 from movie_recommendation_api.movie.models import Movie
-from movie_recommendation_api.users.models import Profile
+from movie_recommendation_api.users.models import BaseUser
 
 
 class CanRateAfterReleaseDate(permissions.BasePermission):
@@ -69,7 +69,7 @@ class IsOwnerProfilePermissionOrReadOnly(permissions.BasePermission):
     """
 
     def has_object_permission(
-            self, request: Request, view: APIView, profile: Profile
+            self, request: Request, view: APIView, user: BaseUser
     ) -> bool:
 
         """
@@ -81,7 +81,7 @@ class IsOwnerProfilePermissionOrReadOnly(permissions.BasePermission):
 
         :param request: The incoming HTTP request.
         :param view: The view requesting access to the profile.
-        :param profile: The user profile being accessed.
+        :param user: The user being accessed.
 
         :return: True if the user has permission, False otherwise.
         """
@@ -92,4 +92,4 @@ class IsOwnerProfilePermissionOrReadOnly(permissions.BasePermission):
             return True
 
         # Allow updates only if the requesting user is the owner of the profile.
-        return profile.user == request.user
+        return user == request.user

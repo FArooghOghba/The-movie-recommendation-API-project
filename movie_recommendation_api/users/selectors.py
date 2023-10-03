@@ -1,7 +1,22 @@
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 
-from .models import Profile
+from .models import BaseUser, Profile
 from ..movie.models import Rating, Review
+
+
+def get_user_obj(*, username: str) -> BaseUser:
+    """
+    Retrieves a user object based on the provided username.
+
+    This function takes a username as an input parameter and retrieves the
+    corresponding user object from the database using the Django ORM.
+
+    :param username: The username of the user to retrieve.
+    :return: The retrieved user object.
+    """
+
+    user_obj = BaseUser.objects.get(username=username)
+    return user_obj
 
 
 def get_profile(*, username: str) -> Profile:
@@ -29,6 +44,7 @@ def get_profile(*, username: str) -> Profile:
         lookup='reviews', queryset=Review.objects.select_related('movie')
     )
 
+    # Retrieve the user's profile along with related data
     user_profile = (
         Profile.objects
         .select_related('user')
@@ -37,6 +53,12 @@ def get_profile(*, username: str) -> Profile:
             'watchlist',
             ratings_prefetch,
             reviews_prefetch,
+        )
+        .annotate(
+            watchlist_count=Count('watchlist', distinct=True),
+            favorite_genres_count=Count('favorite_genres', distinct=True),
+            ratings_count=Count('ratings', distinct=True),
+            reviews_count=Count('reviews', distinct=True)
         )
         .get(user__username=username)
     )

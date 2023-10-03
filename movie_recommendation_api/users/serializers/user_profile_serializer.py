@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MinLengthValidator
@@ -118,22 +120,27 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
             "ratings", "reviews"
         )
 
-    def get_favorite_genres(self, obj):
+    def get_favorite_genres(self, obj) -> dict[str, list[str]]:
 
         """
-        Retrieve and format the user's favorite genres.
+        Retrieve and format the user's favorite genres their count.
 
         :param: obj (Profile): The user's profile object.
 
         :return: list[str]: A list of favorite genres' titles.
         """
 
-        return [genre.title for genre in obj.favorite_genres.all()]
+        favorite_genres = {
+            'genres_count': obj.favorite_genres_count,
+            'genres': [genre.title for genre in obj.favorite_genres.all()]
+        }
 
-    def get_watchlist(self, obj) -> list[dict]:
+        return favorite_genres
+
+    def get_watchlist(self, obj) -> dict[str, list[dict[str, Any]]]:
 
         """
-        Retrieve and format the user's watchlist.
+        Retrieve and format the user's watchlist and movies count.
 
         :param: obj (Profile): The user's profile object.
 
@@ -142,7 +149,8 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
 
         watchlist_queryset = obj.watchlist.order_by('-created_at')
 
-        watchlist = []
+        watchlist = {}
+        movies = []
 
         for movie_obj in watchlist_queryset:
             movie_detail = {
@@ -155,13 +163,16 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
                 # 'movie_cast_crew': movie_obj.cast_crew,
                 'movie_synopsis': movie_obj.synopsis,
             }
-            watchlist.append(movie_detail)
+            movies.append(movie_detail)
+
+        watchlist['movies'] = movies
+        watchlist['watchlist_count'] = obj.watchlist_count
 
         return watchlist
 
-    def get_ratings(self, obj) -> list[dict]:
+    def get_ratings(self, obj) -> dict[str, list[dict[str, Any]]]:
         """
-        Retrieve and format the user's movie ratings.
+        Retrieve and format the user's movie ratings and ratings count.
 
         :param: obj (Profile): The user's profile object.
 
@@ -170,7 +181,8 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
 
         rating_queryset = obj.ratings.order_by('-created_at')
 
-        ratings = []
+        ratings = {}
+        ratings_detail = []
 
         for rating_obj in rating_queryset:
             rating_detail = {
@@ -185,13 +197,17 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
                 # 'movie_cast_crew': movie_obj.cast_crew,
                 # 'ratings_count': rating_obj.movie.ratings_count,
             }
-            ratings.append(rating_detail)
+            ratings_detail.append(rating_detail)
+
+        ratings['ratings_detail'] = ratings_detail
+        ratings['ratings_count'] = obj.ratings_count
 
         return ratings
 
-    def get_reviews(self, obj) -> list[dict]:
+    def get_reviews(self, obj) -> dict[str, list[dict[str, Any]]]:
+
         """
-        Retrieve and format the user's movie reviews.
+        Retrieve and format the user's movie reviews and reviews count.
 
         :param: obj (Profile): The user's profile object.
 
@@ -200,7 +216,8 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
 
         review_queryset = obj.reviews.order_by('-created_at')
 
-        reviews = []
+        reviews = {}
+        reviews_detail = []
 
         for review_obj in review_queryset:
             review_detail = {
@@ -210,6 +227,9 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
                 'content': review_obj.content,
                 'datetime': review_obj.created_at
             }
-            reviews.append(review_detail)
+            reviews_detail.append(review_detail)
+
+        reviews['reviews_detail'] = reviews_detail
+        reviews['reviews_count'] = obj.reviews_count
 
         return reviews

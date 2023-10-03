@@ -239,7 +239,7 @@ def test_patch_update_user_profile_for_add_movie_to_watchlist_return_successful(
     )
     assert response.status_code == status.HTTP_202_ACCEPTED
 
-    user_profile_watchlist = response.data['watchlist']
+    user_profile_watchlist = response.data['watchlist']['movies']
     assert len(user_profile_watchlist) == 3
 
     movie_added_by_user = third_test_movie.title
@@ -286,7 +286,7 @@ def test_patch_update_profile_for_add_genre_to_favorite_genres_return_successful
     )
     assert response.status_code == status.HTTP_202_ACCEPTED
 
-    user_profile_favorite_genres = response.data['favorite_genres']
+    user_profile_favorite_genres = response.data['favorite_genres']['genres']
     assert len(user_profile_favorite_genres) == 3
 
     genre_added_by_user = third_test_genre.title
@@ -334,7 +334,7 @@ def test_update_user_profile_for_remove_movie_from_watchlist_return_successful(
     )
     assert response.status_code == status.HTTP_202_ACCEPTED
 
-    user_profile_response = response.data['watchlist']
+    user_profile_response = response.data['watchlist']['movies']
     assert len(user_profile_response) == 2
 
     user_profile_response_watchlist = [
@@ -385,11 +385,11 @@ def test_update_user_profile_for_remove_genre_from_favorite_genres_return_succes
     )
     assert response.status_code == status.HTTP_202_ACCEPTED
 
-    user_profile_favorite_genres_response = response.data['favorite_genres']
-    assert len(user_profile_favorite_genres_response) == 2
+    profile_favorite_genres_response = response.data['favorite_genres']['genres']
+    assert len(profile_favorite_genres_response) == 2
 
     genre_removed_by_user = third_test_genre.title
-    assert genre_removed_by_user not in user_profile_favorite_genres_response
+    assert genre_removed_by_user not in profile_favorite_genres_response
 
 
 @pytest.mark.parametrize(

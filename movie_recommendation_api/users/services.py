@@ -2,6 +2,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import transaction
 
 from .models import BaseUser, Profile
+from .selectors import get_profile
 from ..movie.selectors import get_genre_obj, get_movie_obj
 
 
@@ -110,7 +111,7 @@ def update_profile_fields(*, username: str, updated_fields: dict) -> Profile:
     :return: Profile: The updated user profile.
     """
 
-    user = BaseUser.objects.get(username=username)
+    user = BaseUser.objects.only('username').get(username=username)
     user_profile = Profile.objects.get(user=user)
 
     if 'username' in updated_fields.keys():
@@ -163,4 +164,6 @@ def update_profile_fields(*, username: str, updated_fields: dict) -> Profile:
 
     user_profile.save()
 
-    return user_profile
+    user_updated_profile = get_profile(username=user.username)
+
+    return user_updated_profile

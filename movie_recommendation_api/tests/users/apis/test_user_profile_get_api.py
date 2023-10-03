@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from movie_recommendation_api.users.models import Profile
+from movie_recommendation_api.users.selectors import get_profile
 from movie_recommendation_api.users.serializers.user_profile_serializer import (
     OutPutProfileModelSerializer
 )
@@ -94,7 +94,7 @@ def test_register_create_user_profile_return_successful(
     assert response.status_code == status.HTTP_200_OK
 
     # Serialize the user's profile
-    test_user_profile = Profile.objects.get(user=first_test_user)
+    test_user_profile = get_profile(username=first_test_user.username)
     test_user_profile_serializer = OutPutProfileModelSerializer(
         instance=test_user_profile
     )
@@ -167,10 +167,14 @@ def test_get_user_profile_updated_when_user_rating_to_movies_return_successful(
     )
     assert profile_response.status_code == status.HTTP_200_OK
 
+    # Check rating count and rating details
     user_profile_ratings = profile_response.data['ratings']
-    assert len(user_profile_ratings) == 3
+    user_profile_ratings_detail = user_profile_ratings['ratings_detail']
+    user_profile_ratings_count = user_profile_ratings['ratings_count']
+    assert user_profile_ratings_count == 3
+    assert len(user_profile_ratings_detail) == user_profile_ratings_count
 
-    rating_added_by_user = user_profile_ratings[0]['user_rating']
+    rating_added_by_user = user_profile_ratings_detail[0]['user_rating']
     assert rating_added_by_user == payload['rate']
 
 
@@ -220,8 +224,78 @@ def test_get_user_profile_updated_when_user_review_to_movies_return_successful(
     )
     assert profile_response.status_code == status.HTTP_200_OK
 
+    # Check reviews count and review details
     user_profile_reviews = profile_response.data['reviews']
-    assert len(user_profile_reviews) == 3
+    user_profile_reviews_detail = user_profile_reviews['reviews_detail']
+    user_profile_reviews_count = user_profile_reviews['reviews_count']
+    assert user_profile_reviews_count == 3
+    assert len(user_profile_reviews_detail) == user_profile_reviews_count
 
-    review_added_by_user = user_profile_reviews[0]['content']
+    review_added_by_user = user_profile_reviews_detail[0]['content']
     assert review_added_by_user == payload['review']
+
+
+def test_get_profile_counts_for_watchlist_favorite_genres_return_successful(
+    api_client, first_test_movie, second_test_movie, third_test_movie,
+    first_test_genre, second_test_genre, third_test_genre, forth_test_genre,
+    first_test_user,
+) -> None:
+
+    """
+    Test to ensure that the user's profile correctly reflects watchlist
+    and favorite genres counts.
+
+    This test verifies that the user's profile, when accessed through
+    the API, correctly displays the counts for watchlist movies and
+    favorite genres.
+
+
+    :param api_client (APIClient): The Django REST framework API client.
+    :param first_test_movie (Movie): An instance of the first test movie.
+    :param second_test_movie (Movie): An instance of the second test movie.
+    :param third_test_movie (Movie): An instance of the third test movie.
+    :param first_test_genre (Genre): An instance of the first test genre.
+    :param second_test_genre (Genre): An instance of the second test genre.
+    :param third_test_genre (Genre): An instance of the third test genre.
+    :param forth_test_genre (Genre): An instance of the fourth test genre.
+    :param first_test_user (User): An instance of the first test user.
+
+    :return: None
+    """
+
+    test_user_profile = first_test_user.profile
+    test_user_profile_url = user_profile_url(
+        username=first_test_user.username
+    )
+
+    # Add data to the user's profile
+    test_user_profile.watchlist.add(
+        first_test_movie, second_test_movie, third_test_movie
+    )
+
+    test_user_profile.favorite_genres.add(
+        first_test_genre, second_test_genre, third_test_genre, forth_test_genre
+    )
+
+    # Authenticate the first test user for the API call
+    api_client.force_authenticate(user=first_test_user)
+
+    # Check that the user's profile correctly reflects the added review
+    profile_response = api_client.get(
+        path=test_user_profile_url,
+    )
+    assert profile_response.status_code == status.HTTP_200_OK
+
+    # Check favorite genres count and details
+    user_profile_favorite_genres = profile_response.data['favorite_genres']
+    user_profile_genres_detail = user_profile_favorite_genres['genres']
+    user_profile_favorite_genres_count = user_profile_favorite_genres['genres_count']
+    assert user_profile_favorite_genres_count == 4
+    assert len(user_profile_genres_detail) == user_profile_favorite_genres_count
+
+    # Check watchlist count and movie details
+    user_profile_watchlist = profile_response.data['watchlist']
+    user_profile_watchlist_movies = user_profile_watchlist['movies']
+    user_profile_watchlist_count = user_profile_watchlist['watchlist_count']
+    assert user_profile_watchlist_count == 3
+    assert len(user_profile_watchlist_movies) == user_profile_watchlist_count

@@ -18,7 +18,7 @@ from movie_recommendation_api.users.serializers.user_profile_serializer import (
 from movie_recommendation_api.users.services import (
     register, update_profile_fields
 )
-from movie_recommendation_api.users.selectors import get_profile
+from movie_recommendation_api.users.selectors import get_profile, get_user_obj
 
 from drf_spectacular.utils import extend_schema
 
@@ -153,13 +153,14 @@ class ProfileAPIView(ApiAuthMixin, APIView):
             # Extract the validated data from the serializer
             updated_fields = serializer.validated_data
 
-            user_profile = update_profile_fields(
+            # Check object-level permissions
+            user_obj = get_user_obj(username=username)
+            self.check_object_permissions(request, user_obj)
+
+            get_user_updated_profile = update_profile_fields(
                 username=username,
                 updated_fields=updated_fields,
             )
-
-            # Check object-level permissions
-            self.check_object_permissions(request, user_profile)
 
         except Exception as exc:
             exception_response = handle_exceptions(
@@ -171,6 +172,6 @@ class ProfileAPIView(ApiAuthMixin, APIView):
             )
 
         output_serializer = self.output_serializer(
-            user_profile, context={'request': request}
+            get_user_updated_profile, context={'request': request}
         )
         return Response(output_serializer.data, status=status.HTTP_202_ACCEPTED)
