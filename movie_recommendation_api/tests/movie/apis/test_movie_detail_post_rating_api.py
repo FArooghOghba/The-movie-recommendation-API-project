@@ -7,8 +7,23 @@ from django.utils import timezone
 
 from rest_framework import status
 
+from movie_recommendation_api.movie.models import Rating
 
 pytestmark = pytest.mark.django_db
+
+
+def movie_detail_url(movie_slug: str) -> str:
+    """
+    Generate the URL for the movie detail API endpoint based on the movie slug.
+
+    This function takes a movie slug as input and generates the URL for the
+    movie detail API endpoint by using the `reverse` function provided by Django's
+    URL resolver. The movie slug is included as a parameter in the URL.
+
+    :param movie_slug: The slug of the movie.
+    :return: The URL for the movie 'detail API' endpoint.
+    """
+    return reverse(viewname='api:movie:detail', args=[movie_slug])
 
 
 def movie_rating_url(movie_slug: str) -> str:
@@ -166,7 +181,7 @@ def test_post_rate_to_movie_with_wrong_data_should_error(
 
 
 def test_post_rate_to_movie_that_not_released_yet_should_error(
-    api_client, first_test_movie, first_test_user
+    api_client, first_test_movie, first_test_user, first_test_rating
 ) -> None:
 
     """
@@ -182,6 +197,7 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
     :param api_client: The 'API client' used to send requests to the API.
     :param first_test_movie: The test movie object.
     :param first_test_user: The test user object.
+    :param first_test_rating: The test rating object.
     :return: None
     """
 
@@ -190,10 +206,21 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
     first_test_movie.release_date = test_movie_release_date
     first_test_movie.save()
 
+    first_test_rating.user = first_test_user
+    first_test_rating.movie = first_test_movie
+    first_test_rating.save()
+
     api_client.force_authenticate(user=first_test_user)
 
-    url = movie_rating_url(movie_slug=first_test_movie.slug)
-    payload = {'rate': 8}
+    get_movie_detail_url = movie_detail_url(movie_slug=first_test_movie.slug)
+    get_movie_detail_response = api_client.get(path=get_movie_detail_url)
+    assert get_movie_detail_response.status_code == status.HTTP_200_OK
 
-    response = api_client.post(path=url, data=payload)
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    payload = {'rate': 8}
+    post_rating_movie_url = movie_rating_url(movie_slug=first_test_movie.slug)
+    post_rating_movie_response = api_client.post(path=post_rating_movie_url, data=payload)
+    assert post_rating_movie_response.status_code == status.HTTP_403_FORBIDDEN
+
+    rating_obj = Rating.objects.get(user=first_test_user)
+    user_rating = rating_obj.rating
+    assert user_rating != get_movie_detail_response.data['user_rating']

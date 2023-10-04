@@ -11,7 +11,7 @@ from movie_recommendation_api.movie.serializers.movie_detail_serializers import 
     MovieDetailOutPutModelSerializer
 )
 from movie_recommendation_api.movie.services import rate_movie, review_movie
-from movie_recommendation_api.movie.selectors import get_movie_detail
+from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_obj
 from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
 from movie_recommendation_api.movie.permissions import CanRateAfterReleaseDate
@@ -149,6 +149,10 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
         input_serializer.is_valid(raise_exception=True)
 
         try:
+            # Check object-level permissions
+            movie_for_rate = get_movie_obj(movie_slug=movie_slug)
+            self.check_object_permissions(request, movie_for_rate)
+
             user = request.user
             rate = input_serializer.validated_data.get('rate')
             rate_movie(
@@ -156,9 +160,6 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
             )
 
             rated_movie = get_movie_detail(movie_slug=movie_slug, user=user)
-
-            # Check object-level permissions
-            self.check_object_permissions(request, rated_movie)
 
         except Exception as exc:
             exception_response = handle_exceptions(
