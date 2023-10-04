@@ -7,7 +7,8 @@ from django.utils import timezone
 
 from rest_framework import status
 
-from movie_recommendation_api.movie.models import Rating
+from movie_recommendation_api.users.models import Profile
+
 
 pytestmark = pytest.mark.django_db
 
@@ -181,7 +182,7 @@ def test_post_rate_to_movie_with_wrong_data_should_error(
 
 
 def test_post_rate_to_movie_that_not_released_yet_should_error(
-    api_client, first_test_movie, first_test_user, first_test_rating
+    api_client, first_test_movie, first_test_user
 ) -> None:
 
     """
@@ -197,18 +198,16 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
     :param api_client: The 'API client' used to send requests to the API.
     :param first_test_movie: The test movie object.
     :param first_test_user: The test user object.
-    :param first_test_rating: The test rating object.
     :return: None
     """
+
+    user_profile_before_request = first_test_user.profile
+    user_ratings_before_request = list(user_profile_before_request.ratings.all())
 
     test_movie_release_date = timezone.now().date() + timedelta(days=1)
 
     first_test_movie.release_date = test_movie_release_date
     first_test_movie.save()
-
-    first_test_rating.user = first_test_user
-    first_test_rating.movie = first_test_movie
-    first_test_rating.save()
 
     api_client.force_authenticate(user=first_test_user)
 
@@ -221,6 +220,7 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
     post_rating_movie_response = api_client.post(path=post_rating_movie_url, data=payload)
     assert post_rating_movie_response.status_code == status.HTTP_403_FORBIDDEN
 
-    rating_obj = Rating.objects.get(user=first_test_user)
-    user_rating = rating_obj.rating
-    assert user_rating != get_movie_detail_response.data['user_rating']
+    # Check that, movie is not in the user profile.
+    user_profile_after_request = Profile.objects.get(user=first_test_user)
+    user_ratings_after_request = list(user_profile_after_request.ratings.all())
+    assert user_ratings_before_request == user_ratings_after_request

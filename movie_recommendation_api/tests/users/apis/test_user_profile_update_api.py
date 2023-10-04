@@ -462,6 +462,8 @@ def test_patch_update_user_profile_for_username_with_different_user_return_error
     :return: None
     """
 
+    test_user_profile_before_request = first_test_user.profile
+
     # Authenticate the first test user for the API call
     api_client.force_authenticate(user=first_test_user)
 
@@ -481,6 +483,17 @@ def test_patch_update_user_profile_for_username_with_different_user_return_error
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    # Check that user profile fields have not changed after forbidden status.
+    test_user_profile_after_request = Profile.objects.get(user=first_test_user)
+    payload_key = list(payload.keys())[0]
+
+    if payload_key == 'username':
+        profile_field = test_user_profile_after_request.user.username
+        assert profile_field == test_user_profile_before_request.user.username
+    else:
+        profile_field = getattr(test_user_profile_after_request, payload_key)
+        assert profile_field == getattr(test_user_profile_before_request, payload_key)
 
 
 @pytest.mark.parametrize(
