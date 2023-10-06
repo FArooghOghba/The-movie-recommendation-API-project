@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from movie_recommendation_api.movie.models import Movie, Rating, Review
+from movie_recommendation_api.movie.selectors import get_movie_detail
 from movie_recommendation_api.users.models import Profile
 
 
@@ -52,7 +53,46 @@ def rate_movie(*, user: get_user_model(), movie_slug: str, rate: int) -> Movie:
 
     # cache_profile(user=user)
 
-    return movie
+    rated_movie = get_movie_detail(movie_slug=movie_slug, user=user)
+    return rated_movie
+
+
+@transaction.atomic
+def update_movie_rating(
+    *, user: get_user_model(), movie_slug: str, updated_rate: int
+) -> Movie:
+
+    """
+    This function updates a rating record for the given user and movie with
+    the provided rating value. It first fetches the movie object based on
+    the provided movie_slug and then updates a new Rating object with the user,
+    movie, and rating data.
+
+    The function is wrapped in a "transaction.atomic" block, ensuring that
+    the database operations are executed within a single transaction.
+    This ensures data integrity and consistency.
+
+    :raises:
+        Movie.DoesNotExist: If the movie with the provided movie_slug
+        does not exist in the database.
+
+    :param user: (User): The user who is rating the movie.
+    :param movie_slug: (str): The unique slug representing the movie being rated.
+    :param updated_rate: (int): The new rating value given by the user.
+    It Should be an integer between 1 and 10.
+    :return: Movie object that has been rated.
+    """
+
+    movie = get_movie(movie_slug=movie_slug)
+
+    (
+        Rating.objects
+        .filter(user=user, movie=movie)
+        .update(rating=updated_rate)
+    )
+
+    updated_movie_rating = get_movie_detail(movie_slug=movie_slug, user=user)
+    return updated_movie_rating
 
 
 @transaction.atomic

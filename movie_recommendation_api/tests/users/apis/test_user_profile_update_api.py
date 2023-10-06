@@ -492,8 +492,15 @@ def test_patch_update_user_profile_for_username_with_different_user_return_error
         profile_field = test_user_profile_after_request.user.username
         assert profile_field == test_user_profile_before_request.user.username
     else:
-        profile_field = getattr(test_user_profile_after_request, payload_key)
-        assert profile_field == getattr(test_user_profile_before_request, payload_key)
+        profile_field_after_update = getattr(
+            test_user_profile_after_request, payload_key
+        )
+
+        profile_field_before_update = getattr(
+            test_user_profile_before_request, payload_key
+        )
+
+        assert profile_field_after_update == profile_field_before_update
 
 
 @pytest.mark.parametrize(

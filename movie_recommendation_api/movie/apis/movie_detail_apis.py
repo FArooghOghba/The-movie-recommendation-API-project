@@ -10,7 +10,9 @@ from movie_recommendation_api.movie.serializers.movie_detail_serializers import 
     MovieDetailRatingInPutSerializer, MovieDetailReviewInPutSerializer,
     MovieDetailOutPutModelSerializer
 )
-from movie_recommendation_api.movie.services import rate_movie, review_movie
+from movie_recommendation_api.movie.services import (
+    rate_movie, update_movie_rating, review_movie
+)
 from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_obj
 from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
@@ -111,7 +113,7 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
 
         permissions = super().get_permissions()
 
-        if self.request.method == 'POST':
+        if self.request.method in ['POST', 'PATCH']:
             permissions.append(CanRateAfterReleaseDate())
 
         return permissions
@@ -155,11 +157,9 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
 
             user = request.user
             rate = input_serializer.validated_data.get('rate')
-            rate_movie(
+            rated_movie = rate_movie(
                 user=user, movie_slug=movie_slug, rate=rate
             )
-
-            rated_movie = get_movie_detail(movie_slug=movie_slug, user=user)
 
         except Exception as exc:
             exception_response = handle_exceptions(
@@ -174,6 +174,64 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
             rated_movie, context={'request': request}
         )
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        request=MovieDetailRatingInPutSerializer,
+        responses=MovieDetailOutPutModelSerializer
+    )
+    def patch(self, request, movie_slug):
+        """
+        PATCH method for updating a movie rating.
+
+        This method allows users to update their rate to a movie by sending
+        a PATCH request with the 'rate' field in the request body.
+        The 'rate' field should be a valid integer from 1 to 10.
+        The input data is validated using the `MovieDetailInPutSerializer`
+        and passed to the `update_rate_movie` function to update a rating for
+        the specified movie. The method then calls the `get_movie_detail`
+        function to retrieve the updated detailed representation of
+        the rated movie, which is serialized using
+        the `MovieDetailOutPutModelSerializer` and returned in the response.
+
+
+        :param request: (HttpRequest): The request object containing the rating data.
+        :param movie_slug: (Str): The slug of the movie for which the rating
+                is being updated.
+        :return: Response: A response containing the detailed representation
+                of the rated movie, including the newly updated rating.
+
+        :raises ValidationError: If the input data is not valid.
+        :raises Authorization: If the user does not authorize.
+        :raises DoesNotExist: If the movie does not exist.
+        """
+
+        input_serializer = self.movie_input_serializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        try:
+            # Check object-level permissions
+            movie_for_rate = get_movie_obj(movie_slug=movie_slug)
+            self.check_object_permissions(request, movie_for_rate)
+
+            user = request.user
+            rate = input_serializer.validated_data.get('rate')
+            movie_updated = update_movie_rating(
+                user=user, movie_slug=movie_slug, updated_rate=rate
+            )
+
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
+            return Response(
+                data=exception_response.data,
+                status=exception_response.status_code,
+            )
+
+        output_serializer = self.movie_output_serializer(
+            movie_updated, context={'request': request}
+        )
+        return Response(output_serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 class MovieDetailReviewAPIView(ApiAuthMixin, APIView):

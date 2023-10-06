@@ -217,7 +217,9 @@ def test_post_rate_to_movie_that_not_released_yet_should_error(
 
     payload = {'rate': 8}
     post_rating_movie_url = movie_rating_url(movie_slug=first_test_movie.slug)
-    post_rating_movie_response = api_client.post(path=post_rating_movie_url, data=payload)
+    post_rating_movie_response = api_client.post(
+        path=post_rating_movie_url, data=payload
+    )
     assert post_rating_movie_response.status_code == status.HTTP_403_FORBIDDEN
 
     # Check that, movie is not in the user profile.
