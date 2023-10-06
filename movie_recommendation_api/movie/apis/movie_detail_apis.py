@@ -11,7 +11,7 @@ from movie_recommendation_api.movie.serializers.movie_detail_serializers import 
     MovieDetailOutPutModelSerializer
 )
 from movie_recommendation_api.movie.services import (
-    rate_movie, update_movie_rating, review_movie
+    rate_movie, update_movie_rating, delete_movie_rating, review_movie
 )
 from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_obj
 from movie_recommendation_api.api.mixins import ApiAuthMixin
@@ -232,6 +232,55 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
             movie_updated, context={'request': request}
         )
         return Response(output_serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @extend_schema(
+        responses=MovieDetailOutPutModelSerializer
+    )
+    def delete(self, request, movie_slug):
+        """
+        DELETE method for deleting a movie rating.
+
+        This method allows users to update their rate to a movie
+        by sending a DELETE request to the movie rating endpoint with the `movie_slug`
+        parameter, and passed to the `delete_rate_movie` function to delete a rating for
+        the specified movie.The method calls the `get_movie_detail` function with the provided
+        `movie_slug` and current user to retrieve the detailed representation of the
+        movie. The result is then serialized using
+        the `MovieDetailOutPutModelSerializer` and returned in the response.
+
+        :param request: (HttpRequest): The request object containing the rating data.
+        :param movie_slug: (Str): The slug of the movie for which the rating
+                is being updated.
+        :return: Response: A response containing the detailed representation
+                of the rated movie, including the newly updated rating.
+
+        :raises Authorization: If the user does not authorize.
+        :raises DoesNotExist: If the movie does not exist.
+        """
+
+        try:
+            # Check object-level permissions
+            movie_for_delete_rate = get_movie_obj(movie_slug=movie_slug)
+            self.check_object_permissions(request, movie_for_delete_rate)
+
+            user = request.user
+            movie_rate_deleted = delete_movie_rating(
+                user=user, movie_slug=movie_slug
+            )
+
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
+            return Response(
+                data=exception_response.data,
+                status=exception_response.status_code,
+            )
+
+        output_serializer = self.movie_output_serializer(
+            movie_rate_deleted, context={'request': request}
+        )
+        return Response(output_serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
 class MovieDetailReviewAPIView(ApiAuthMixin, APIView):

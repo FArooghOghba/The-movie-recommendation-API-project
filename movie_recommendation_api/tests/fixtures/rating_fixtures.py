@@ -31,6 +31,19 @@ def second_test_rating():
 
 
 @pytest.fixture
+def third_test_rating():
+    """
+    Fixture for creating a test rating.
+
+    This fixture creates and returns a test rating object using
+    the `RatingFactory` factory.
+
+    :return: Rating: A test rating object.
+    """
+    return RatingFactory()
+
+
+@pytest.fixture
 def five_test_ratings() -> QuerySet[RatingFactory]:
     """
     Fixture that creates a batch of five test movies.
