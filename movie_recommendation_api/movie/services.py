@@ -125,7 +125,10 @@ def delete_movie_rating(
 
 
 @transaction.atomic
-def review_movie(*, user: get_user_model(), movie_slug: str, review: str) -> Movie:
+def review_movie(
+    *, user: get_user_model(), movie_slug: str, review_data: dict
+) -> Movie:
+
     """
     Create a movie review for a specific movie.
 
@@ -140,14 +143,15 @@ def review_movie(*, user: get_user_model(), movie_slug: str, review: str) -> Mov
 
     :param user: The user who is writing the review (User model instance).
     :param movie_slug: The slug of the movie for which the review is being written.
-    :param review: The content of the review.
+    :param review_data: The contents of the review.
     :return: The Movie object associated with the review.
     """
 
     movie = get_movie(movie_slug=movie_slug)
 
     review = Review.objects.create(
-        user=user, movie=movie, content=review
+        user=user, movie=movie, title=review_data['title'],
+        content=review_data['review'], spoilers=review_data['spoilers']
     )
 
     user_profile = Profile.objects.get(user=user)
@@ -155,4 +159,5 @@ def review_movie(*, user: get_user_model(), movie_slug: str, review: str) -> Mov
 
     # cache_profile(user=user)
 
-    return movie
+    reviewed_movie = get_movie_detail(movie_slug=movie_slug, user=user)
+    return reviewed_movie

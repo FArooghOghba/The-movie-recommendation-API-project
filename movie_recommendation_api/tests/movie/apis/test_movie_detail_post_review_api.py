@@ -50,7 +50,11 @@ def test_post_review_to_movie_should_success(
     api_client.force_authenticate(user=third_test_user)
 
     url = movie_review_url(movie_slug=test_movie_without_cast_crew.slug)
-    payload = {'review': 'This is Third Test user review.'}
+    payload = {
+        'title': 'first test review title',
+        'review': 'This is Third Test user review.',
+        'spoilers': True
+    }
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_201_CREATED
@@ -88,7 +92,11 @@ def test_post_review_to_movie_does_not_exists_should_error(
     not_exists_movie_slug = 'not-exists-movie-slug'
 
     url = movie_review_url(movie_slug=not_exists_movie_slug)
-    payload = {'review': 'This is the Test user review.'}
+    payload = {
+        'title': 'first test review title',
+        'review': 'This is Third Test user review.',
+        'spoilers': True
+    }
 
     response = api_client.post(path=url, data=payload)
     print(response.data)
@@ -111,7 +119,11 @@ def test_post_review_to_movie_with_unauthorized_user_should_error(
     """
 
     url = movie_review_url(movie_slug=first_test_movie.slug)
-    payload = {'review': 'This is the Test user review.'}
+    payload = {
+        'title': 'first test review title',
+        'review': 'This is Third Test user review.',
+        'spoilers': True
+    }
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -147,7 +159,51 @@ def test_post_review_to_movie_with_wrong_data_should_error(
     api_client.force_authenticate(user=first_test_user)
 
     url = movie_review_url(movie_slug=first_test_movie.slug)
-    payload = {'review': wrong_review}
+    payload = {
+        'title': 'first test review title',
+        'review': wrong_review,
+        'spoilers': True
+    }
+
+    response = api_client.post(path=url, data=payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    'wrong_title', (
+        '',
+        ' ',
+        '    '
+    )
+)
+def test_post_review_to_movie_with_wrong_title_should_error(
+    api_client, first_test_movie, first_test_user, wrong_title
+) -> None:
+
+    """
+     Test that posting a review with wrong data returns a 400 Bad Request error.
+
+    This parameterized test checks various cases where the provided review data
+    is invalid, such as wrong title format, empty string or white-space.
+
+    The test ensures that the API returns a 400 Bad Request status for each
+    invalid case.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_movie: A fixture providing the first test movie object.
+    :param first_test_user: A fixture providing the first test user object.
+    :param wrong_title: A parameter representing invalid title values.
+    :return: None
+    """
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_review_url(movie_slug=first_test_movie.slug)
+    payload = {
+        'title': wrong_title,
+        'review': 'This is Third Test user review.',
+        'spoilers': True
+    }
 
     response = api_client.post(path=url, data=payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST

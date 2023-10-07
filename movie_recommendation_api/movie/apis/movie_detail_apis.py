@@ -241,11 +241,12 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
         DELETE method for deleting a movie rating.
 
         This method allows users to update their rate to a movie
-        by sending a DELETE request to the movie rating endpoint with the `movie_slug`
-        parameter, and passed to the `delete_rate_movie` function to delete a rating for
-        the specified movie.The method calls the `get_movie_detail` function with the provided
-        `movie_slug` and current user to retrieve the detailed representation of the
-        movie. The result is then serialized using
+        by sending a DELETE request to the movie rating endpoint with
+        the `movie_slug` parameter, and passed to the `delete_rate_movie`
+        function to delete a rating for the specified movie.
+        The method calls the `get_movie_detail` function with the provided
+        `movie_slug` and current user to retrieve the detailed
+        representation of the movie. The result is then serialized using
         the `MovieDetailOutPutModelSerializer` and returned in the response.
 
         :param request: (HttpRequest): The request object containing the rating data.
@@ -324,13 +325,12 @@ class MovieDetailReviewAPIView(ApiAuthMixin, APIView):
         input_serializer.is_valid(raise_exception=True)
 
         try:
+            # Extract the validated data from the serializer
+            review_data = input_serializer.validated_data
             user = request.user
-            review = input_serializer.validated_data.get('review')
-            review_movie(
-                user=user, movie_slug=movie_slug, review=review
+            reviewed_movie = review_movie(
+                user=user, movie_slug=movie_slug, review_data=review_data
             )
-
-            reviewed_movie = get_movie_detail(movie_slug=movie_slug, user=user)
 
         except Exception as exc:
             exception_response = handle_exceptions(

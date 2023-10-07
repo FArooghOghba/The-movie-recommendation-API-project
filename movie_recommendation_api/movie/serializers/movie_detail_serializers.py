@@ -36,10 +36,17 @@ class MovieDetailReviewInPutSerializer(serializers.Serializer):
     """
     Serializer for validating the input data when creating a movie review.
 
+    This serializer is used to validate data provided when a user creates
+    a review for a movie.
+
     Attributes:
-        review (str): The user's review for the movie (max length: 512 characters).
+        title (CharField, max_length=128): The title of the review.
+        spoilers (BooleanField): Indicates if the review contains spoilers.
+        review (CharField, max_length=512): The user's review for the movie.
     """
 
+    title = serializers.CharField(max_length=128)
+    spoilers = serializers.BooleanField()
     review = serializers.CharField(
         max_length=512,
         help_text="The user's review for the movie."
