@@ -209,15 +209,27 @@ class Review(BaseModel):
     """
     Represents a review for a movie.
 
+    A review is a user-generated content that provides insights and opinions
+    about a movie.
+
     Attributes:
+        title (CharField, max_length=128): The title of the review.
+        slug (SlugField, unique=True): A unique slug used for identifying the review.
+        spoilers (BooleanField, default=False): Indicates if the review contains spoilers.
         user (ForeignKey): The user who wrote the review.
         movie (ForeignKey): The movie for which the review is written.
-        content (TextField): The content of the review.
+        content (TextField, max_length=512): The content of the review.
 
     Methods:
-        __str__(self): Returns a string representation of the review.
+        save(self, *args, **kwargs): Overrides the save method to auto-generate
+        the slug if not provided.
+        __str__(self): Returns a string representation of the review, including
+        movie title, user, and title.
     """
 
+    title = models.CharField(max_length=128, unique=True, default='')
+    slug = models.SlugField(unique=True, default='')
+    spoilers = models.BooleanField(default=False)
     user = models.ForeignKey(
         to=get_user_model(), on_delete=models.CASCADE, related_name='reviews'
     )
@@ -228,10 +240,19 @@ class Review(BaseModel):
         max_length=512, validators=[validate_review_content, validate_content_length]
     )
 
+    def save(self, *args, **kwargs):
+        """
+        Overrides the default save method to auto-generate the slug if not provided.
+        """
+
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Review for {self.movie.title} by" \
                f"{self.user.username} >>" \
-               f"{self.content[:15]}"
+               f"{self.title}"
 
 
 class Role(BaseModel):

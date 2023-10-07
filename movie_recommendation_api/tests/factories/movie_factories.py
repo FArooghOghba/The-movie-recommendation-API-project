@@ -121,6 +121,9 @@ class ReviewFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Review
 
+    title = factory.LazyAttribute(lambda _: fake.sentence(nb_words=3))
+    slug = factory.LazyAttribute(lambda _: fake.slug())
+    spoilers = factory.Faker('boolean')
     user = factory.SubFactory(BaseUserFactory)
     movie = factory.SubFactory(MovieFactory)
     content = factory.LazyAttribute(lambda _: fake.paragraph())

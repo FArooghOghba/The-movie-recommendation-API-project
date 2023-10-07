@@ -23,9 +23,12 @@ def test_create_review_success(first_test_user, first_test_movie) -> None:
     :return: None
     """
 
+    review_title = 'first test review title'
     review_content = 'This is a valid review content within the allowed length.'
 
     test_review = Review.objects.create(
+        title=review_title,
+        spoilers=True,
         user=first_test_user,
         movie=first_test_movie,
         content=review_content
@@ -33,8 +36,10 @@ def test_create_review_success(first_test_user, first_test_movie) -> None:
 
     assert str(test_review) == f"Review for {test_review.movie.title} by" \
                                f"{test_review.user.username} >>" \
-                               f"{test_review.content[:15]}"
+                               f"{test_review.title}"
 
+    assert test_review.title == review_title
+    assert test_review.spoilers is True
     assert test_review.user == first_test_user
     assert test_review.movie == first_test_movie
     assert test_review.content == review_content
@@ -60,18 +65,24 @@ def test_create_reviews_for_movies_success(
     """
 
     first_test_review_for_first_test_movie = Review.objects.create(
+        title='first test review title',
+        spoilers=True,
         user=first_test_user,
         movie=first_test_movie,
         content="first test review."
     )
 
     second_test_review_for_first_test_movie = Review.objects.create(
+        title='second test review title',
+        spoilers=False,
         user=second_test_user,
         movie=first_test_movie,
         content="second test review."
     )
 
     first_test_review_for_second_movie = Review.objects.create(
+        title='third test review title',
+        spoilers=False,
         user=first_test_user,
         movie=second_test_movie,
         content="first test review."
@@ -113,18 +124,24 @@ def test_create_reviews_for_users_success(
     """
 
     first_user_review_for_first_movie = Review.objects.create(
+        title='first test review title',
+        spoilers=True,
         user=first_test_user,
         movie=first_test_movie,
         content="first test review."
     )
 
     second_user_review_for_first_movie = Review.objects.create(
+        title='second test review title',
+        spoilers=False,
         user=second_test_user,
         movie=first_test_movie,
         content="second test review."
     )
 
     first_user_review_for_second_movie = Review.objects.create(
+        title='third test review title',
+        spoilers=False,
         user=first_test_user,
         movie=second_test_movie,
         content="first test review."
@@ -174,6 +191,39 @@ def test_create_review_with_max_length_content(
     )
 
     assert test_review.content == content
+
+
+@pytest.mark.parametrize(
+    'title',
+    (None, '', '   ')
+)
+def test_create_review_with_wrong_title_return_error(
+    first_test_user, first_test_movie, title
+) -> None:
+
+    """
+    Test creating a review with missing title.
+
+    This test verifies that creating a review without providing the title
+    raises a ValidationError or IntegrityError.
+
+    :param first_test_user: A fixture providing the first test user object.
+    :param first_test_movie: A fixture providing the first test movie object.
+    :param title: The title of the review, which is set to a value
+           that is None, an empty string, or a string containing only
+           whitespace characters.
+    :return: None
+    """
+
+    with pytest.raises((ValidationError, IntegrityError)):
+        test_review = Review.objects.create(
+            title=title,
+            spoilers=True,
+            user=first_test_user,
+            movie=first_test_movie,
+            content='first test review content.'
+        )
+        test_review.full_clean()
 
 
 @pytest.mark.parametrize(
