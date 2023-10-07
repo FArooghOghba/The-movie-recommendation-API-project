@@ -224,6 +224,7 @@ class OutPutProfileModelSerializer(serializers.ModelSerializer):
                 'movie_title': review_obj.movie.title,
                 'movie_poster': review_obj.movie.poster.url,
                 'movie_release_date': review_obj.movie.release_date,
+                'title': review_obj.title,
                 'content': review_obj.content,
                 'datetime': review_obj.created_at
             }

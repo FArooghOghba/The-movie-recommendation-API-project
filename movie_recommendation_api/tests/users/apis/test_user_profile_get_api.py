@@ -213,7 +213,11 @@ def test_get_user_profile_updated_when_user_review_to_movies_return_successful(
 
     # Add a new review via the API
     url = movie_review_url(movie_slug=first_test_movie.slug)
-    payload = {'review': 'This is Test user review.'}
+    payload = {
+        'title': 'first test review title',
+        'spoilers': True,
+        'review': 'This is Test user review.'
+    }
 
     review_response = api_client.post(path=url, data=payload)
     assert review_response.status_code == status.HTTP_201_CREATED
@@ -232,7 +236,9 @@ def test_get_user_profile_updated_when_user_review_to_movies_return_successful(
     assert len(user_profile_reviews_detail) == user_profile_reviews_count
 
     review_added_by_user = user_profile_reviews_detail[0]['content']
+    review_title_added_by_user = user_profile_reviews_detail[0]['title']
     assert review_added_by_user == payload['review']
+    assert review_title_added_by_user == payload['title']
 
 
 def test_get_profile_counts_for_watchlist_favorite_genres_return_successful(
