@@ -27,20 +27,21 @@ def movie_rating_url(movie_slug: str) -> str:
     return reverse(viewname='api:movie:rating', args=[movie_slug])
 
 
-def movie_review_url(movie_slug: str) -> str:
+def movie_create_review_url(movie_slug: str) -> str:
 
     """
-    Generate the URL for the movie review API endpoint based on the movie slug.
+    Generate the URL for the movie create review API endpoint based
+    on the movie slug.
 
     This function takes a movie slug as input and generates the URL for the
-    movie review API endpoint by using the `reverse` function provided by Django's
-    URL resolver. The movie slug is included as a parameter in the URL.
+    movie create review API endpoint by using the `reverse` function provided
+    by Django's URL resolver. The movie slug is included as a parameter in the URL.
 
     :param movie_slug: The slug of the movie.
-    :return: The URL for the movie 'review API' endpoint.
+    :return: The URL for the movie creates 'review API' endpoint.
     """
 
-    return reverse(viewname='api:movie:review', args=[movie_slug])
+    return reverse(viewname='api:movie:create-review', args=[movie_slug])
 
 
 def user_profile_url(username: str) -> str:
@@ -212,7 +213,7 @@ def test_get_user_profile_updated_when_user_review_to_movies_return_successful(
     api_client.force_authenticate(user=first_test_user)
 
     # Add a new review via the API
-    url = movie_review_url(movie_slug=first_test_movie.slug)
+    url = movie_create_review_url(movie_slug=first_test_movie.slug)
     payload = {
         'title': 'first test review title',
         'spoilers': True,

@@ -161,7 +161,9 @@ class MovieDetailOutPutModelSerializer(MovieOutPutModelSerializer):
         for review_obj in review_queryset:
             review_detail = {
                 'user': review_obj.user.username,
+                'title': review_obj.title,
                 'content': review_obj.content,
+                'spoilers': review_obj.spoilers,
                 'datetime': review_obj.created_at
             }
             reviews.append(review_detail)

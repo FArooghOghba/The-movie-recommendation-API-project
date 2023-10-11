@@ -73,24 +73,24 @@ def test_delete_rate_from_movie_should_success(
     third_test_rating.movie = first_test_movie
     third_test_rating.save()
 
-    # Fetch the movie's details to get its rate before the update.
+    # Fetch the movie's details to get its rate before the deleting.
     get_movie_detail_url = movie_detail_url(movie_slug=first_test_movie.slug)
     get_movie_detail_response = api_client.get(path=get_movie_detail_url)
     assert get_movie_detail_response.status_code == status.HTTP_200_OK
 
-    first_test_movie_rate_before_update = get_movie_detail_response.data['rate']
+    first_test_movie_rate_before_delete = get_movie_detail_response.data['rate']
 
     # Authenticate the second test user for the API call.
     api_client.force_authenticate(user=first_test_user)
 
     # Delete the movie rating with movie slug.
-    update_movie_rating_url = movie_rating_url(movie_slug=first_test_movie.slug)
+    delete_movie_rating_url = movie_rating_url(movie_slug=first_test_movie.slug)
     delete_rating_movie_response = api_client.delete(
-        path=update_movie_rating_url
+        path=delete_movie_rating_url
     )
     assert delete_rating_movie_response.status_code == status.HTTP_204_NO_CONTENT
 
-    first_test_movie_rate_after_update = delete_rating_movie_response.data['rate']
+    first_test_movie_rate_after_delete = delete_rating_movie_response.data['rate']
 
     # Assertion: Check that the new rating is successfully deleted from the movie.
     first_test_movie_ratings_count = len(
@@ -106,17 +106,18 @@ def test_delete_rate_from_movie_should_success(
              first_test_movie_ratings[1].rating
                                      ) / 2
 
-    assert first_test_movie_rate_after_update == round(
+    assert first_test_movie_rate_after_delete == round(
         first_test_movie_expected_rate, 1
     )
 
-    assert first_test_movie_rate_after_update != first_test_movie_rate_before_update
+    assert first_test_movie_rate_after_delete != first_test_movie_rate_before_delete
 
 
 def test_delete_rate_from_movie_and_user_profile_should_success(
         api_client, first_test_user, second_test_user,
         first_test_movie, first_test_rating, second_test_rating
 ) -> None:
+
     """
     Test that a user can successfully delete their movie rating
     and that their profile gets updated accordingly.
@@ -131,6 +132,7 @@ def test_delete_rate_from_movie_and_user_profile_should_success(
     :param first_test_movie: First test movie object.
     :param first_test_rating: First test rating object.
     :param second_test_rating: Second test rating object.
+    :return: None
     """
 
     # Set up initial ratings for the movie by different users.
@@ -145,7 +147,7 @@ def test_delete_rate_from_movie_and_user_profile_should_success(
     second_test_rating.movie = first_test_movie
     second_test_rating.save()
 
-    # Fetch the movie's details to get its rate before the update.
+    # Fetch the movie's details to get its rate before the deleting.
     get_movie_detail_url = movie_detail_url(movie_slug=first_test_movie.slug)
     get_movie_detail_response = api_client.get(path=get_movie_detail_url)
     assert get_movie_detail_response.status_code == status.HTTP_200_OK
@@ -154,24 +156,24 @@ def test_delete_rate_from_movie_and_user_profile_should_success(
     api_client.force_authenticate(user=first_test_user)
 
     # Delete the movie rating with the movie slug.
-    update_movie_rating_url = movie_rating_url(movie_slug=first_test_movie.slug)
-    update_rating_movie_response = api_client.delete(
-        path=update_movie_rating_url
+    delete_movie_rating_url = movie_rating_url(movie_slug=first_test_movie.slug)
+    delete_rating_movie_response = api_client.delete(
+        path=delete_movie_rating_url
     )
-    assert update_rating_movie_response.status_code == status.HTTP_204_NO_CONTENT
+    assert delete_rating_movie_response.status_code == status.HTTP_204_NO_CONTENT
 
     # Get the user's profile after the update.
-    first_test_user_profile_after_update = (
+    first_test_user_profile_after_delete = (
         Profile.objects.get(user=first_test_user)
 
     )
 
-    first_test_user_ratings_after_update = list(
-        first_test_user_profile_after_update.ratings.all()
+    first_test_user_ratings_after_delete = list(
+        first_test_user_profile_after_delete.ratings.all()
     )
 
     # Assertion: Check that the user's profile rating gets deleted correctly.
-    assert first_test_user_ratings_after_update == []
+    assert first_test_user_ratings_after_delete == []
 
 
 def test_delete_rate_from_movie_does_not_exists_should_error(
@@ -224,5 +226,5 @@ def test_delete_rate_from_movie_with_unauthorized_user_should_error(
 
     url = movie_rating_url(movie_slug=first_test_movie.slug)
 
-    response = api_client.delete( path=url)
+    response = api_client.delete(path=url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED

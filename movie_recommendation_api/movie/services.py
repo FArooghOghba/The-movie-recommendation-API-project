@@ -161,3 +161,33 @@ def review_movie(
 
     reviewed_movie = get_movie_detail(movie_slug=movie_slug, user=user)
     return reviewed_movie
+
+
+def delete_movie_review(
+    *, user: get_user_model(), movie_slug: str, review_slug: str
+) -> Movie:
+
+    """
+    This function deletes a review record for the given user and movie with
+    the provided movie slug and review slug. It first fetches the movie object
+    based on the provided movie_slug and then deletes the review object based
+    on the provided review_slug for the given user and movie.
+
+    :raises:
+        Movie.DoesNotExist: If the movie with the provided movie_slug
+        does not exist in the database.
+
+    :param user: (User): The user who is rating the movie.
+    :param movie_slug: (str): The unique slug representing the movie being reviewed.
+    :param review_slug: (str): The unique slug representing the review.
+
+    :return: Movie object that has been rated.
+    """
+
+    movie = get_movie(movie_slug=movie_slug)
+
+    review_obj = Review.objects.get(movie=movie, slug=review_slug)
+    review_obj.delete()
+
+    deleted_movie_review = get_movie_detail(movie_slug=movie_slug, user=user)
+    return deleted_movie_review

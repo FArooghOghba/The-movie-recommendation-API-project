@@ -8,20 +8,21 @@ from rest_framework import status
 pytestmark = pytest.mark.django_db
 
 
-def movie_review_url(movie_slug: str) -> str:
+def movie_create_review_url(movie_slug: str) -> str:
 
     """
-    Generate the URL for the movie review API endpoint based on the movie slug.
+    Generate the URL for the movie create review API endpoint based
+    on the movie slug.
 
     This function takes a movie slug as input and generates the URL for the
-    movie review API endpoint by using the `reverse` function provided by Django's
-    URL resolver. The movie slug is included as a parameter in the URL.
+    movie create review API endpoint by using the `reverse` function provided
+    by Django's URL resolver. The movie slug is included as a parameter in the URL.
 
     :param movie_slug: The slug of the movie.
-    :return: The URL for the movie 'review API' endpoint.
+    :return: The URL for the movie creates 'review API' endpoint.
     """
 
-    return reverse(viewname='api:movie:review', args=[movie_slug])
+    return reverse(viewname='api:movie:create-review', args=[movie_slug])
 
 
 def test_post_review_to_movie_should_success(
@@ -49,7 +50,7 @@ def test_post_review_to_movie_should_success(
     # Authenticate the second test user for the API call
     api_client.force_authenticate(user=third_test_user)
 
-    url = movie_review_url(movie_slug=test_movie_without_cast_crew.slug)
+    url = movie_create_review_url(movie_slug=test_movie_without_cast_crew.slug)
     payload = {
         'title': 'first test review title',
         'review': 'This is Third Test user review.',
@@ -91,7 +92,7 @@ def test_post_review_to_movie_does_not_exists_should_error(
 
     not_exists_movie_slug = 'not-exists-movie-slug'
 
-    url = movie_review_url(movie_slug=not_exists_movie_slug)
+    url = movie_create_review_url(movie_slug=not_exists_movie_slug)
     payload = {
         'title': 'first test review title',
         'review': 'This is Third Test user review.',
@@ -118,7 +119,7 @@ def test_post_review_to_movie_with_unauthorized_user_should_error(
     :return: None
     """
 
-    url = movie_review_url(movie_slug=first_test_movie.slug)
+    url = movie_create_review_url(movie_slug=first_test_movie.slug)
     payload = {
         'title': 'first test review title',
         'review': 'This is Third Test user review.',
@@ -158,7 +159,7 @@ def test_post_review_to_movie_with_wrong_data_should_error(
 
     api_client.force_authenticate(user=first_test_user)
 
-    url = movie_review_url(movie_slug=first_test_movie.slug)
+    url = movie_create_review_url(movie_slug=first_test_movie.slug)
     payload = {
         'title': 'first test review title',
         'review': wrong_review,
@@ -198,7 +199,7 @@ def test_post_review_to_movie_with_wrong_title_should_error(
 
     api_client.force_authenticate(user=first_test_user)
 
-    url = movie_review_url(movie_slug=first_test_movie.slug)
+    url = movie_create_review_url(movie_slug=first_test_movie.slug)
     payload = {
         'title': wrong_title,
         'review': 'This is Third Test user review.',

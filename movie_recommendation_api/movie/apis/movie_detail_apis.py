@@ -11,7 +11,8 @@ from movie_recommendation_api.movie.serializers.movie_detail_serializers import 
     MovieDetailOutPutModelSerializer
 )
 from movie_recommendation_api.movie.services import (
-    rate_movie, update_movie_rating, delete_movie_rating, review_movie
+    rate_movie, update_movie_rating, delete_movie_rating,
+    review_movie, delete_movie_review
 )
 from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_obj
 from movie_recommendation_api.api.mixins import ApiAuthMixin
@@ -284,12 +285,13 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
         return Response(output_serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
-class MovieDetailReviewAPIView(ApiAuthMixin, APIView):
+class MovieDetailCreateReviewAPIView(ApiAuthMixin, APIView):
 
     """
-    API view for reviewing a movie.
+    API view for creating a review for a movie.
 
-    This view allows users to review a movie by sending a POST request.
+    This view allows authorized users to create a review for a movie by
+    sending a POST request.
 
     Input Serializer:
         MovieDetailReviewInputSerializer: Serializer for validating the input
@@ -345,3 +347,71 @@ class MovieDetailReviewAPIView(ApiAuthMixin, APIView):
             reviewed_movie, context={'request': request}
         )
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class MovieDetailDeleteReviewAPIView(ApiAuthMixin, APIView):
+
+    """
+    API view for deleting a movie review.
+
+    This view allows users to delete their review for a movie
+    by sending a DELETE request.
+
+    Methods:
+        delete (self, request, movie_slug, review_slug): DELETE method for
+        deleting a movie review.
+    """
+
+    movie_output_serializer = MovieDetailOutPutModelSerializer
+
+    @extend_schema(
+        responses=MovieDetailOutPutModelSerializer
+    )
+    def delete(self, request, movie_slug, review_slug):
+        """
+        DELETE method for deleting a movie review.
+
+        This method allows users to delete their review to a movie
+        by sending a DELETE request to the movie review endpoint with
+        the `movie_slug` and `review_slug` parameter, and passed
+        to the `delete_review_movie` function to delete a review for
+        the specified movie.
+        The method calls the `get_movie_detail` function with the provided
+        `movie_slug` and current user to retrieve the detailed
+        representation of the movie. The result is then serialized using
+        the `MovieDetailOutPutModelSerializer` and returned in the response.
+
+        :param request: (HttpRequest): The request object containing the rating data.
+        :param movie_slug: (Str): The slug of the movie for which the rating
+                is being updated.
+        :param review_slug: (Str): The slug of the review is going to be deleted.
+        :return: Response: A response containing the detailed representation
+                of the rated movie, including the newly updated rating.
+
+        :raises Authorization: If the user does not authorize.
+        :raises DoesNotExist: If the movie does not exist.
+        """
+
+        try:
+            # Check object-level permissions
+            movie_for_delete_review = get_movie_obj(movie_slug=movie_slug)
+            self.check_object_permissions(request, movie_for_delete_review)
+
+            user = request.user
+            movie_review_deleted = delete_movie_review(
+                user=user, movie_slug=movie_slug, review_slug=review_slug
+            )
+
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
+            return Response(
+                data=exception_response.data,
+                status=exception_response.status_code,
+            )
+
+        output_serializer = self.movie_output_serializer(
+            movie_review_deleted, context={'request': request}
+        )
+        return Response(output_serializer.data, status=status.HTTP_204_NO_CONTENT)

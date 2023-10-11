@@ -215,7 +215,8 @@ class Review(BaseModel):
     Attributes:
         title (CharField, max_length=128): The title of the review.
         slug (SlugField, unique=True): A unique slug used for identifying the review.
-        spoilers (BooleanField, default=False): Indicates if the review contains spoilers.
+        spoilers (BooleanField, default=False): Indicates if the review
+        contains spoilers.
         user (ForeignKey): The user who wrote the review.
         movie (ForeignKey): The movie for which the review is written.
         content (TextField, max_length=512): The content of the review.
