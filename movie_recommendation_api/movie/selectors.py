@@ -129,6 +129,28 @@ def get_movie_obj(*, movie_slug: str) -> Movie:
     return movie_obj
 
 
+def rating_obj_existence(*, movie_slug: str, user: get_user_model) -> bool:
+
+    """
+    Check the existence of a rating object for a user and a movie.
+
+    This function checks whether a rating object exists in the database
+    based on the provided movie slug and user. It uses the Django ORM to query
+    the database for the existence of a rating object.
+
+    :param movie_slug: (str) The slug of the movie to check.
+    :param user: (User) The authenticated user.
+    :return: (bool) True if a rating object exists, False otherwise.
+    """
+
+    rating_obj = Rating.objects.filter(
+        user=user,
+        movie__slug=movie_slug
+    )
+
+    return rating_obj.exists()
+
+
 def get_genre_obj(*, genre_slug: str) -> Genre:
     """
     Retrieves a genre object based on the provided genre slug.

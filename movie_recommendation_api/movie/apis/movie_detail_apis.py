@@ -14,7 +14,9 @@ from movie_recommendation_api.movie.services import (
     rate_movie, update_movie_rating, delete_movie_rating,
     review_movie, delete_movie_review
 )
-from movie_recommendation_api.movie.selectors import get_movie_detail, get_movie_obj
+from movie_recommendation_api.movie.selectors import (
+    get_movie_detail, get_movie_obj, rating_obj_existence
+)
 from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
 from movie_recommendation_api.movie.permissions import CanRateAfterReleaseDate
@@ -124,24 +126,27 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
         responses=MovieDetailOutPutModelSerializer
     )
     def post(self, request, movie_slug):
+
         """
-        POST method for creating a movie rating.
+        POST method for creating or updating a movie rating.
 
-        This method allows users to rate a movie by sending a POST request with the
-        'rate' field in the request body. The 'rate' field should be a valid integer
-        from 1 to 10.The input data is validated using
-        the `MovieDetailInPutSerializer` and passed to the `rate_movie` function
-        to create a new rating for the specified movie. The method then calls
-        the `get_movie_detail` function to retrieve the updated detailed
-        representation of the rated movie, which is serialized using
-        the `MovieDetailOutPutModelSerializer` and returned in the response.
-
+        This method allows users to rate a movie by sending a
+        POST request with the 'rate' field in the request body.
+        The 'rate' field should be a valid integer from 1 to 10.
+        The input data is validated using the `MovieDetailInPutSerializer`
+        and passed to the `rate_movie` function to create a new rating for
+        the specified movie.
+        If the user has already rated the movie, the existing rating will
+        be updated. The method then calls the `get_movie_detail` function
+        to retrieve the updated detailed representation of the rated movie,
+        which is serialized using the `MovieDetailOutPutModelSerializer`
+        and returned in the response.
 
         :param request: (HttpRequest): The request object containing the rating data.
         :param movie_slug: (Str): The slug of the movie for which the rating
-                is being added.
+                is being added or updated.
         :return: Response: A response containing the detailed representation
-                of the rated movie, including the newly added rating.
+                of the rated movie, including the newly added or updated rating.
 
         :raises ValidationError: If the input data is not valid.
         :raises Authorization: If the user does not authorize.
@@ -157,6 +162,11 @@ class MovieDetailRatingAPIView(ApiAuthMixin, APIView):
             self.check_object_permissions(request, movie_for_rate)
 
             user = request.user
+            existing_rating = rating_obj_existence(user=user, movie_slug=movie_slug)
+            if existing_rating:
+                # If the user has already rated the movie, update the existing rating
+                return self.patch(request, movie_slug)
+
             rate = input_serializer.validated_data.get('rate')
             rated_movie = rate_movie(
                 user=user, movie_slug=movie_slug, rate=rate

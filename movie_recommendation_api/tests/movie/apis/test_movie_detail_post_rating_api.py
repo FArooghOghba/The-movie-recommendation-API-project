@@ -91,6 +91,146 @@ def test_post_rate_to_movie_should_success(
     assert response.data['rate'] == round(first_test_movie_expected_rate, 1)
 
 
+def test_post_rate_to_movie_that_already_rated_by_user_should_update_success(
+    api_client, first_test_user, second_test_user, first_test_movie,
+    first_test_rating, second_test_rating
+) -> None:
+
+    """
+    Test that a user can update their rating for a movie they've already rated.
+    This test checks that both the movie's average rating and the user's profile
+    rating get updated correctly.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_user: A fixture providing the first test user object.
+    :param second_test_user: A fixture providing the second test user object.
+    :param first_test_movie: A fixture providing a test movie object.
+    :param first_test_rating: A fixture providing the first test rating object.
+    :param second_test_rating: A fixture providing the second test rating object.
+    :return: None
+    """
+
+    first_test_user_rating_before_update = 5
+
+    # Set up initial ratings for the movie by different users.
+    first_test_rating.user = first_test_user
+    first_test_rating.movie = first_test_movie
+    first_test_rating.rating = first_test_user_rating_before_update
+    first_test_rating.save()
+
+    second_test_rating.user = second_test_user
+    second_test_rating.movie = first_test_movie
+    second_test_rating.save()
+
+    # Fetch the movie's details to get its rate before the update.
+    get_movie_detail_url = movie_detail_url(movie_slug=first_test_movie.slug)
+    get_movie_detail_response = api_client.get(path=get_movie_detail_url)
+    assert get_movie_detail_response.status_code == status.HTTP_200_OK
+
+    first_test_movie_rate_before_update = get_movie_detail_response.data['rate']
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_rating_url(movie_slug=first_test_movie.slug)
+    payload = {'rate': 7}
+
+    update_rating_movie_response = api_client.post(path=url, data=payload)
+    assert update_rating_movie_response.status_code == status.HTTP_202_ACCEPTED
+
+    first_test_movie_rate_after_update = update_rating_movie_response.data['rate']
+
+    # Assertion: Check that the new rating is successfully updated to the movie.
+    first_test_movie_ratings_count = len(
+        first_test_movie.movie_ratings.all()
+    )
+    assert first_test_movie_ratings_count == 2
+
+    # Assertion: Check that the average rating is calculated correctly for the movie.
+    first_test_rating, second_test_rating = first_test_movie.movie_ratings.all()
+
+    first_test_movie_expected_rate = (
+         first_test_rating.rating +
+         second_test_rating.rating
+                                     ) / 2
+
+    assert first_test_movie_rate_after_update == round(
+        first_test_movie_expected_rate, 1
+    )
+
+    assert first_test_movie_rate_after_update != first_test_movie_rate_before_update
+
+
+def test_post_rate_to_movie_that_already_rated_by_user_should_update_profile_success(
+        api_client, first_test_user, second_test_user,
+        first_test_movie, first_test_rating, second_test_rating
+) -> None:
+
+    """
+    Test that a user's profile rating gets updated correctly when they update
+    their rating for a movie.
+
+    :param api_client: An instance of the Django REST Framework's APIClient.
+    :param first_test_user: A fixture providing the first test user object.
+    :param second_test_user: A fixture providing the second test user object.
+    :param first_test_movie: A fixture providing a test movie object.
+    :param first_test_rating: A fixture providing the first test rating object.
+    :param second_test_rating: A fixture providing the second test rating object.
+    :return: None
+    """
+
+    first_test_user_rating_before_update = 5
+
+    # Set up initial ratings for the movie by different users.
+    first_test_rating.user = first_test_user
+    first_test_rating.movie = first_test_movie
+    first_test_rating.rating = first_test_user_rating_before_update
+    first_test_rating.save()
+
+    first_test_user_profile = first_test_user.profile
+    first_test_user_profile.ratings.add(first_test_rating)
+
+    second_test_rating.user = second_test_user
+    second_test_rating.movie = first_test_movie
+    second_test_rating.save()
+
+    # Fetch the movie's details to get its rate before the update.
+    get_movie_detail_url = movie_detail_url(movie_slug=first_test_movie.slug)
+    get_movie_detail_response = api_client.get(path=get_movie_detail_url)
+    assert get_movie_detail_response.status_code == status.HTTP_200_OK
+
+    # Authenticate the second test user for the API call.
+    api_client.force_authenticate(user=first_test_user)
+
+    # Update the movie rating with a new rating value.
+    payload = {'rate': 7}
+    update_movie_rating_url = movie_rating_url(movie_slug=first_test_movie.slug)
+    update_rating_movie_response = api_client.post(
+        path=update_movie_rating_url, data=payload
+    )
+    assert update_rating_movie_response.status_code == status.HTTP_202_ACCEPTED
+
+    # Get the user's profile after the update.
+    first_test_user_profile_after_update = (
+        Profile.objects.get(user=first_test_user)
+
+    )
+
+    first_test_user_ratings_after_update = (
+        first_test_user_profile_after_update.ratings.all()
+    )
+
+    first_test_user_rating_after_update = (
+        first_test_user_ratings_after_update[0].rating
+    )
+
+    # Assertion: Check that the user's profile rating gets updated correctly.
+    assert len(first_test_user_ratings_after_update) == 1
+    assert (first_test_user_rating_after_update !=
+            first_test_user_rating_before_update)
+
+    assert first_test_user_rating_after_update == payload['rate']
+
+
 def test_post_rate_to_movie_does_not_exists_should_error(
     api_client, first_test_user
 ) -> None:
