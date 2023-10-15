@@ -75,10 +75,12 @@ def test_delete_rate_from_movie_should_success(
 
     # Fetch the movie's details to get its rate before the deleting.
     get_movie_detail_url = movie_detail_url(movie_slug=first_test_movie.slug)
-    get_movie_detail_response = api_client.get(path=get_movie_detail_url)
-    assert get_movie_detail_response.status_code == status.HTTP_200_OK
+    get_response_before_delete_rating = api_client.get(
+        path=get_movie_detail_url
+    )
+    assert get_response_before_delete_rating.status_code == status.HTTP_200_OK
 
-    first_test_movie_rate_before_delete = get_movie_detail_response.data['rate']
+    first_test_movie_rate_before_delete = get_response_before_delete_rating.data['rate']
 
     # Authenticate the second test user for the API call.
     api_client.force_authenticate(user=first_test_user)
@@ -90,7 +92,14 @@ def test_delete_rate_from_movie_should_success(
     )
     assert delete_rating_movie_response.status_code == status.HTTP_204_NO_CONTENT
 
-    first_test_movie_rate_after_delete = delete_rating_movie_response.data['rate']
+    # Fetch the movie's details to get its rate before the deleting.
+    get_movie_detail_url = movie_detail_url(movie_slug=first_test_movie.slug)
+    get_response_after_delete_rating = api_client.get(
+        path=get_movie_detail_url
+    )
+    assert get_response_after_delete_rating.status_code == status.HTTP_200_OK
+
+    first_test_movie_rate_after_delete = get_response_after_delete_rating.data['rate']
 
     # Assertion: Check that the new rating is successfully deleted from the movie.
     first_test_movie_ratings_count = len(

@@ -4,7 +4,6 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.request import Request
 
-from movie_recommendation_api.movie.models import Movie
 from movie_recommendation_api.users.models import BaseUser
 
 
@@ -23,21 +22,21 @@ class CanRateAfterReleaseDate(permissions.BasePermission):
     """
 
     def has_object_permission(
-            self, request: Request, view: APIView, movie: Movie
+            self, request: Request, view: APIView, release_date: date
     ) -> bool:
 
         """
         Checks if the user has permission to rate the movie.
 
-        This method retrieves the movie object and checks if the current date is
-        greater than or equal to the release date of the movie.
+        This method retrieves the movie release date and checks if
+        the current date is greater than or equal to the release date of the movie.
         If it is, it returns `True` to indicate that the user has permission
         to rate the movie. Otherwise, it returns `False` to indicate that
         the user does not have permission to rate the movie.
 
         :param request: The request object.
         :param view: The view object.
-        :param movie: The movie being accessed.
+        :param release_date: The movie release date being accessed.
 
         :return: `True` if the user has permission to rate the movie,
         `False` otherwise.
@@ -48,9 +47,7 @@ class CanRateAfterReleaseDate(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        release_date = movie.release_date
         current_date = date.today()
-
         return current_date >= release_date
 
 

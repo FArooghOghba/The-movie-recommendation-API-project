@@ -129,6 +129,24 @@ def get_movie_obj(*, movie_slug: str) -> Movie:
     return movie_obj
 
 
+def get_movie_release_date(*, movie_slug: str) -> Movie:
+
+    """
+    Retrieves the release date of a movie based on the provided movie slug.
+
+    This function takes a movie slug as an input parameter and retrieves the
+    corresponding movie object from the database using the Django ORM. It then
+    extracts and returns the release date of the movie.
+
+    :param movie_slug: The slug of the movie for which to retrieve the release date.
+    :return: The release date of the movie as a 'date' object.
+    """
+
+    movie = Movie.objects.only('release_date').get(slug=movie_slug)
+    release_date = movie.release_date
+    return release_date
+
+
 def rating_obj_existence(*, movie_slug: str, user: get_user_model) -> bool:
 
     """

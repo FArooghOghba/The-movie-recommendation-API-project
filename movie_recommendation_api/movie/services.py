@@ -12,10 +12,10 @@ def get_movie(movie_slug: str) -> Movie:
     Retrieve a movie by its unique slug.
 
     :param movie_slug: The unique slug of the movie.
-    :return: The retrieved Movie object.
+    :return: The retrieved Movie object primary key.
     """
 
-    movie = Movie.objects.get(slug=movie_slug)
+    movie = Movie.objects.only('pk').get(slug=movie_slug)
     return movie
 
 
@@ -97,31 +97,29 @@ def update_movie_rating(
 
 def delete_movie_rating(
     *, user: get_user_model(), movie_slug: str
-) -> Movie:
+) -> None:
 
     """
-    This function deletes a rating record for the given user and movie with
-    the provided movie slug. It first fetches the movie object based on
-    the provided movie_slug and then deletes the Rating object for the given user
-    and movie.
+    Deletes a rating record for the given user and movie associated with
+    the provided movie slug.
 
-    :raises:
-        Movie.DoesNotExist: If the movie with the provided movie_slug
-        does not exist in the database.
+    This function first retrieves the movie object based on the provided
+    movie_slug and then proceeds to delete the Rating object corresponding
+    to the user and movie.
 
-    :param user: (User): The user who is rating the movie.
-    :param movie_slug: (str): The unique slug representing the movie being rated.
+    :raises Movie.DoesNotExist: If no movie with the provided movie_slug exists
+        in the database.
 
-    :return: Movie object that has been rated.
+    :param user: (User): The user who rated the movie.
+    :param movie_slug: (str): The unique slug identifying the rated movie.
+
+    :return: None
     """
 
     movie = get_movie(movie_slug=movie_slug)
 
     rating_obj = Rating.objects.get(user=user, movie=movie)
     rating_obj.delete()
-
-    deleted_movie_rating = get_movie_detail(movie_slug=movie_slug, user=user)
-    return deleted_movie_rating
 
 
 @transaction.atomic
