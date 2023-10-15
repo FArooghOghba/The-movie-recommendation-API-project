@@ -1,5 +1,6 @@
 from datetime import date
 
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.request import Request
@@ -31,15 +32,15 @@ class CanRateAfterReleaseDate(permissions.BasePermission):
         This method retrieves the movie release date and checks if
         the current date is greater than or equal to the release date of the movie.
         If it is, it returns `True` to indicate that the user has permission
-        to rate the movie. Otherwise, it returns `False` to indicate that
-        the user does not have permission to rate the movie.
+        to rate the movie. Otherwise, it raises a `PermissionDenied` exception
+        with a custom message to indicate that the user does not have permission
+        to rate the movie.
 
         :param request: The request object.
         :param view: The view object.
         :param release_date: The movie release date being accessed.
 
-        :return: `True` if the user has permission to rate the movie,
-        `False` otherwise.
+        :return: `True` if the user has permission to rate the movie.
         """
 
         # Read permissions are allowed to any request,
@@ -48,7 +49,13 @@ class CanRateAfterReleaseDate(permissions.BasePermission):
             return True
 
         current_date = date.today()
-        return current_date >= release_date
+
+        # Check if the current date is greater than or equal to the release date
+        if current_date >= release_date:
+            return True
+
+        # Raise PermissionDenied exception with a custom error message
+        raise PermissionDenied('You cannot rate this movie before its release date.')
 
 
 class IsOwnerProfilePermissionOrReadOnly(permissions.BasePermission):
