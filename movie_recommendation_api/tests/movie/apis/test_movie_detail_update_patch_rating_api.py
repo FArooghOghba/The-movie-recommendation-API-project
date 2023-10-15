@@ -184,6 +184,34 @@ def test_patch_update_rate_to_movie_and_user_profile_should_success(
     assert first_test_user_rating_after_update == payload['rate']
 
 
+def test_patch_update_rate_to_movie_does_not_rated_before_should_error(
+    api_client, first_test_user, first_test_movie
+) -> None:
+
+    """
+    Test that trying to update the rating of a movie that has not been rated
+    by the user should result in a 404 Not Found error.
+
+    This test verifies that when a user attempts to update the rating of a movie
+    that they have not previously rated, the API returns a 404 Not Found error.
+    The test simulates this situation by authenticating a user, preparing the API
+    request to update the rating of a movie they have not rated, and then checks
+    that the response status code matches the expected 404 Not Found error.
+
+    :param api_client: The Django test client for making API requests.
+    :param first_test_user: The user who is attempting to update the rating.
+    :param first_test_movie: The movie being rated.
+    """
+
+    api_client.force_authenticate(user=first_test_user)
+
+    url = movie_rating_url(movie_slug=first_test_movie.slug)
+    payload = {'rate': 7}
+
+    response = api_client.patch(path=url, data=payload)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_patch_update_rate_to_movie_does_not_exists_should_error(
     api_client, first_test_user
 ) -> None:

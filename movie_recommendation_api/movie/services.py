@@ -85,11 +85,10 @@ def update_movie_rating(
 
     movie = get_movie(movie_slug=movie_slug)
 
-    (
-        Rating.objects
-        .filter(user=user, movie=movie)
-        .update(rating=updated_rate)
-    )
+    rating_obj = Rating.objects.only('rating').get(user=user, movie=movie)
+
+    rating_obj.rating = updated_rate
+    rating_obj.save()
 
     updated_movie_rating = get_movie_detail(movie_slug=movie_slug, user=user)
     return updated_movie_rating
