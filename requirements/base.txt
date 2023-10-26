@@ -23,6 +23,7 @@ djangorestframework-simplejwt==5.2.2
 drf-spectacular==0.26.2
 
 Pillow==9.5.0
+lightfm==1.17
 
 django-redis==5.2.0
 flake8==6.0.0

@@ -1,6 +1,8 @@
 from django.urls import path
 
-from movie_recommendation_api.movie.apis.movie_list_apis import MovieAPIView
+from movie_recommendation_api.movie.apis.movie_list_apis import (
+    MovieAPIView, MovieRecommendationAPIView
+)
 from movie_recommendation_api.movie.apis.movie_detail_apis import (
     MovieDetailAPIView, MovieDetailRatingAPIView,
     MovieDetailCreateReviewAPIView, MovieDetailDeleteReviewAPIView
@@ -16,6 +18,13 @@ urlpatterns = [
         MovieAPIView.as_view(),
         name="list"
     ),
+
+    path(
+        'recommendations/<int:user_id>/',
+        MovieRecommendationAPIView.as_view(),
+        name="recommendation"
+    ),
+
 
     path(
         '<slug:movie_slug>/',

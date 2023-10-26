@@ -1,6 +1,11 @@
 import os
 import uuid
 
+from lightfm import LightFM
+from lightfm.data import Dataset
+
+import numpy as np
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
@@ -131,7 +136,7 @@ class Movie(BaseModel):
         poster (ImageField): The image field for the movie's poster.
         trailer (URLField): The URL of the movie's trailer.
         runtime (DurationField): The runtime of the movie.
-        release_date (DateField): The release date of the movie.
+         release_date (DateField): The release date of the movie.
 
     Methods:
         get_absolute_url(self): Returns the absolute URL of the movie.
@@ -283,3 +288,93 @@ class Role(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+class MovieRecommendationModel:
+
+    """
+    A movie recommendation model that uses LightFM.
+
+    This model provides movie recommendations based on user
+    interactions such as ratings and watchlist.
+
+    Attributes:
+        loss (str): The loss function to use ('warp' or 'bpr').
+        epochs (int): The number of training epochs.
+        model (LightFM): The LightFM model for recommendations.
+        dataset (Dataset): The dataset for users and movies.
+
+    Methods:
+        prepare_data(all_movies, all_users, user_ratings): Prepare data for
+        training the recommendation model.
+        train_model(interactions): Train the recommendation model.
+        recommend(user_ids, item_ids, num_recs=10): Get movie recommendations
+        for users.
+    """
+
+    def __init__(self, loss='warp', epochs=10):
+
+        """
+        Initialize a movie recommendation model.
+
+        Args:
+            loss (str): The loss function to use ('warp' or 'bpr').
+            epochs (int): The number of training epochs.
+        """
+
+        self.loss = loss
+        self.epochs = epochs
+        self.model = None
+        self.dataset = Dataset()
+
+    def prepare_data(self, all_movies, all_users, user_ratings):
+
+        """
+        Prepare data for training the recommendation model.
+
+        Args:
+            all_movies (list): List of movie IDs.
+            all_users (list): List of user IDs.
+            user_ratings (list): List of rating data.
+
+        Returns:
+            interactions: Interaction matrix for training.
+        """
+
+        # Fit users and movies to the dataset
+        self.dataset.fit(all_users, items=all_movies)
+
+        # Build the interaction matrix using rating data
+        interactions, _ = self.dataset.build_interactions(user_ratings)
+
+        return interactions
+
+    def train_model(self, interactions):
+        """
+        Train the recommendation model.
+
+        Args:
+            interactions: Interaction matrix for training.
+        """
+
+        self.model = LightFM(loss=self.loss)
+        self.model.fit(interactions, epochs=self.epochs)
+
+    def recommend(self, user_ids, item_ids, num_recs=10):
+
+        """
+        Get movie recommendations for users.
+
+        Args:
+            user_ids: User IDs.
+            item_ids: Movie IDs.
+            num_recs (int): Number of recommendations to return.
+
+        Returns:
+            top_items: Top recommended movie IDs.
+        """
+
+        scores = self.model.predict(user_ids, item_ids)
+        top_items = np.argsort(-scores)[:num_recs]
+
+        return top_items

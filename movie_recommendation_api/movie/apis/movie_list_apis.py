@@ -1,9 +1,11 @@
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from drf_spectacular.utils import extend_schema
 
 from movie_recommendation_api.api.exception_handlers import handle_exceptions
+from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.movie.serializers.movie_list_serializers import (
     MovieOutPutModelSerializer,
 )
@@ -11,7 +13,9 @@ from movie_recommendation_api.movie.serializers.movie_filter_serializers import 
     MovieFilterSerializer,
 )
 
-from movie_recommendation_api.movie.selectors import get_movie_list
+from movie_recommendation_api.movie.selectors import (
+    get_movie_list, get_movie_recommendation_list
+)
 from movie_recommendation_api.api.pagination import (
     CustomLimitOffsetPagination, get_paginated_response_context
 )
@@ -96,6 +100,77 @@ class MovieAPIView(APIView):
             pagination_class=self.Pagination,
             serializer_class=self.output_serializer,
             queryset=movie_list_queryset,
+            request=request,
+            view=self,
+        )
+
+
+class MovieRecommendationAPIView(ApiAuthMixin, APIView):
+
+    """
+    API endpoint to retrieve movie recommendations for a user.
+
+    This endpoint provides movie recommendations for a specific user
+    based on their profile and interactions.
+    Users must be authenticated to access their personalized recommendations.
+
+    Attributes:
+        output_serializer (Serializer): The serializer class to use for the response.
+
+    Methods:
+        get(self, request, user_id): Get movie recommendations for a user.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    output_serializer = MovieOutPutModelSerializer
+
+    class Pagination(CustomLimitOffsetPagination):
+        default_limit = 10
+
+    @extend_schema(
+        responses=MovieOutPutModelSerializer,
+    )
+    def get(self, request, user_id):
+
+        """
+        Get movie recommendations for a user.
+
+        This method retrieves a list of movie recommendations for a user
+        based on their interactions, such as ratings, watchlist, and favorite genres.
+
+        Args:
+            request (Request): The HTTP request object.
+            user_id (int): The unique identifier of the user for whom movie
+            recommendations are requested.
+
+        Returns:
+            Response: A JSON response containing a list of recommended movies.
+
+        Raises:
+            Exception: If an unexpected error occurs, it will be handled and a
+            corresponding response will be provided.
+        """
+
+        try:
+            # Retrieve movie recommendations for the specified user
+            movie_recommendation_list = get_movie_recommendation_list(
+                user_id=user_id
+            )
+
+        except Exception as exc:
+            exception_response = handle_exceptions(
+                exc=exc, ctx={"request": request, "view": self}
+            )
+            return Response(
+                data=exception_response.data,
+                status=exception_response.status_code,
+            )
+
+        return get_paginated_response_context(
+            pagination_class=self.Pagination,
+            serializer_class=self.output_serializer,
+            queryset=movie_recommendation_list,
             request=request,
             view=self,
         )
