@@ -132,7 +132,6 @@ class Movie(BaseModel):
         cast_crew (ManyToManyField): The cast and crew members associated
         with the movie.
         synopsis (str): The synopsis of the movie.
-        ratings (ManyToManyField): The ratings given to the movie by users.
         poster (ImageField): The image field for the movie's poster.
         trailer (URLField): The URL of the movie's trailer.
         runtime (DurationField): The runtime of the movie.
@@ -154,9 +153,6 @@ class Movie(BaseModel):
         through='role'
     )
     synopsis = models.TextField()
-    ratings = models.ManyToManyField(
-        'Rating', related_name='rated_movies', blank=True
-    )
     poster = models.ImageField(upload_to=movie_poster_file_path)
     trailer = models.URLField()
     runtime = models.DurationField()
