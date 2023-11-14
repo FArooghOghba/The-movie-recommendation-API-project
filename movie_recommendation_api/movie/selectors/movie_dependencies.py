@@ -168,13 +168,15 @@ def get_movie_release_date(*, movie_slug: str) -> Movie:
     return release_date
 
 
-def check_movie_release_for_user_rating(*, movie: Movie, user: AUTH_USER_MODEL) -> Movie:
+def check_movie_release_for_user_rating(
+    *, movie: Movie, user: AUTH_USER_MODEL
+) -> Movie:
 
     """
     Checks movie release status and retrieves the user's rating if authenticated.
 
-    This function checks if the movie is released and gets the authenticated user's rating
-    for the movie if available.
+    This function checks if the movie is released and gets the authenticated
+    user's rating for the movie if available.
 
     :param movie: (Movie): The movie object.
     :param user: (User): The authenticated user.

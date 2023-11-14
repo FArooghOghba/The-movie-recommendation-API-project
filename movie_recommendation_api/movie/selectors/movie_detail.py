@@ -1,7 +1,8 @@
 from django.conf.global_settings import AUTH_USER_MODEL
 
 from movie_recommendation_api.movie.selectors.movie_dependencies import (
-    check_movie_release_for_user_rating, get_movie, calculate_and_aggregate_movie_rate, aggregate_movie_reviews_count,
+    get_movie, calculate_and_aggregate_movie_rate, aggregate_movie_reviews_count,
+    check_movie_release_for_user_rating,
 )
 from movie_recommendation_api.movie.models import Movie
 
@@ -22,8 +23,14 @@ def get_movie_detail(*, movie_slug: str, user: AUTH_USER_MODEL = None) -> Movie:
     """
 
     get_movie_obj = get_movie(movie_slug=movie_slug)
-    aggregate_reviews_count_to_movie = aggregate_movie_reviews_count(movie=get_movie_obj)
-    aggregate_movie_rate = calculate_and_aggregate_movie_rate(movie=aggregate_reviews_count_to_movie)
-    checking_movie_user_rating = check_movie_release_for_user_rating(movie=aggregate_movie_rate, user=user)
+    aggregate_reviews_count_to_movie = aggregate_movie_reviews_count(
+        movie=get_movie_obj
+    )
+    aggregate_movie_rate = calculate_and_aggregate_movie_rate(
+        movie=aggregate_reviews_count_to_movie
+    )
+    checking_movie_user_rating = check_movie_release_for_user_rating(
+        movie=aggregate_movie_rate, user=user
+    )
 
     return checking_movie_user_rating
