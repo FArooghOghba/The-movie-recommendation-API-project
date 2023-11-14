@@ -1,3 +1,5 @@
+from typing import List
+
 from django.urls import reverse
 
 from rest_framework import serializers
@@ -46,7 +48,7 @@ class MovieOutPutModelSerializer(serializers.ModelSerializer):
             'release_date'
         ]
 
-    def get_genres(self, obj):
+    def get_genres(self, obj) -> List[str]:
         """
          Returns a list of genre titles associated with the movie.
 

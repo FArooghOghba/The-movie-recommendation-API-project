@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from movie_recommendation_api.movie.models import Movie, Rating, Review
-from movie_recommendation_api.movie.selectors import get_movie_detail
+from movie_recommendation_api.movie.selectors.movie_detail import get_movie_detail
 from movie_recommendation_api.users.models import Profile
 
 

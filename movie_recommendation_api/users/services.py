@@ -3,7 +3,7 @@ from django.db import transaction
 
 from .models import BaseUser, Profile
 from .selectors import get_profile
-from ..movie.selectors import get_genre_obj, get_movie_obj
+from ..movie.selectors.movie_dependencies import get_genre_obj, get_movie_obj
 
 
 def create_profile(

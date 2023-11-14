@@ -14,8 +14,9 @@ from movie_recommendation_api.movie.services import (
     rate_movie, update_movie_rating, delete_movie_rating,
     review_movie, delete_movie_review
 )
-from movie_recommendation_api.movie.selectors import (
-    get_movie_detail, get_movie_release_date, rating_obj_existence
+from movie_recommendation_api.movie.selectors.movie_detail import get_movie_detail
+from movie_recommendation_api.movie.selectors.movie_dependencies import (
+    get_movie_release_date, rating_obj_existence
 )
 from movie_recommendation_api.api.mixins import ApiAuthMixin
 from movie_recommendation_api.api.exception_handlers import handle_exceptions

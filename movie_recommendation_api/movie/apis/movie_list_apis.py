@@ -13,8 +13,9 @@ from movie_recommendation_api.movie.serializers.movie_filter_serializers import 
     MovieFilterSerializer,
 )
 
-from movie_recommendation_api.movie.selectors import (
-    get_movie_list, get_movie_recommendation_list
+from movie_recommendation_api.movie.selectors.movie_list import get_movie_list
+from movie_recommendation_api.movie.selectors.movie_recommendation_list import (
+    get_movie_recommendation_list
 )
 from movie_recommendation_api.api.pagination import (
     CustomLimitOffsetPagination, get_paginated_response_context
