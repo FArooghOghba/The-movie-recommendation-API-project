@@ -1,7 +1,13 @@
+from django.conf.global_settings import AUTH_USER_MODEL
 from django.db.models import Count, Prefetch
 
 from .models import BaseUser, Profile
 from ..movie.models import Rating, Review
+
+
+def get_user_profile(*, user=AUTH_USER_MODEL) -> Profile:
+    user_profile = Profile.objects.get(user=user)
+    return user_profile
 
 
 def get_user_obj(*, username: str) -> BaseUser:

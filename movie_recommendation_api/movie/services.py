@@ -2,8 +2,12 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from movie_recommendation_api.movie.models import Movie, Rating, Review
+from movie_recommendation_api.movie.selectors.movie_dependencies import (
+    get_rating_obj
+)
 from movie_recommendation_api.movie.selectors.movie_detail import get_movie_detail
-from movie_recommendation_api.users.models import Profile
+
+from movie_recommendation_api.users.selectors import get_user_profile
 
 
 def get_movie(movie_slug: str) -> Movie:
@@ -48,7 +52,7 @@ def rate_movie(*, user: get_user_model(), movie_slug: str, rate: int) -> Movie:
         user=user, movie=movie, rating=rate
     )
 
-    user_profile = Profile.objects.get(user=user)
+    user_profile = get_user_profile(user=user)
     user_profile.ratings.add(rating)
 
     # cache_profile(user=user)
@@ -85,7 +89,7 @@ def update_movie_rating(
 
     movie = get_movie(movie_slug=movie_slug)
 
-    rating_obj = Rating.objects.only('rating').get(user=user, movie=movie)
+    rating_obj = get_rating_obj(user=user, movie=movie)
 
     rating_obj.rating = updated_rate
     rating_obj.save()
@@ -117,7 +121,7 @@ def delete_movie_rating(
 
     movie = get_movie(movie_slug=movie_slug)
 
-    rating_obj = Rating.objects.get(user=user, movie=movie)
+    rating_obj = get_rating_obj(user=user, movie=movie)
     rating_obj.delete()
 
 
@@ -151,7 +155,7 @@ def review_movie(
         content=review_data['review'], spoilers=review_data['spoilers']
     )
 
-    user_profile = Profile.objects.get(user=user)
+    user_profile = get_user_profile(user=user)
     user_profile.reviews.add(review)
 
     # cache_profile(user=user)

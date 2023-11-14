@@ -219,3 +219,11 @@ def get_genre_obj(*, genre_slug: str) -> Genre:
 
     genre_obj = Genre.objects.get(slug=genre_slug)
     return genre_obj
+
+
+def get_rating_obj(*, user: AUTH_USER_MODEL, movie: Movie) -> Rating:
+
+    rating_obj = Rating.objects.get(
+        user=user, movie=movie
+    )
+    return rating_obj
