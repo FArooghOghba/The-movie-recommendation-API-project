@@ -18,7 +18,7 @@ from movie_recommendation_api.users.serializers.user_profile_serializer import (
 from movie_recommendation_api.users.services import (
     register, update_profile_fields
 )
-from movie_recommendation_api.users.selectors import get_profile, get_user_obj
+from movie_recommendation_api.users.selectors import get_profile_detail, get_user_obj
 
 from drf_spectacular.utils import extend_schema
 
@@ -114,7 +114,7 @@ class ProfileAPIView(ApiAuthMixin, APIView):
 
         try:
 
-            user_profile = get_profile(username=username)
+            user_profile = get_profile_detail(username=username)
 
         except Exception as exc:
             exception_response = handle_exceptions(

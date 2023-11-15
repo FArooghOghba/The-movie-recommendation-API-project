@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from movie_recommendation_api.users.selectors import get_profile
+from movie_recommendation_api.users.selectors import get_profile_detail
 from movie_recommendation_api.users.serializers.user_profile_serializer import (
     OutPutProfileModelSerializer
 )
@@ -95,7 +95,7 @@ def test_register_create_user_profile_return_successful(
     assert response.status_code == status.HTTP_200_OK
 
     # Serialize the user's profile
-    test_user_profile = get_profile(username=first_test_user.username)
+    test_user_profile = get_profile_detail(username=first_test_user.username)
     test_user_profile_serializer = OutPutProfileModelSerializer(
         instance=test_user_profile
     )

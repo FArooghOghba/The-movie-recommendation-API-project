@@ -7,7 +7,7 @@ from movie_recommendation_api.movie.selectors.movie_dependencies import (
 )
 from movie_recommendation_api.movie.selectors.movie_detail import get_movie_detail
 
-from movie_recommendation_api.users.selectors import get_user_profile
+from movie_recommendation_api.users.selectors import get_user_profile_obj
 
 
 def get_movie(movie_slug: str) -> Movie:
@@ -52,7 +52,7 @@ def rate_movie(*, user: get_user_model(), movie_slug: str, rate: int) -> Movie:
         user=user, movie=movie, rating=rate
     )
 
-    user_profile = get_user_profile(user=user)
+    user_profile = get_user_profile_obj(user=user)
     user_profile.ratings.add(rating)
 
     # cache_profile(user=user)
@@ -155,7 +155,7 @@ def review_movie(
         content=review_data['review'], spoilers=review_data['spoilers']
     )
 
-    user_profile = get_user_profile(user=user)
+    user_profile = get_user_profile_obj(user=user)
     user_profile.reviews.add(review)
 
     # cache_profile(user=user)

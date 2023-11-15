@@ -5,7 +5,16 @@ from .models import BaseUser, Profile
 from ..movie.models import Rating, Review
 
 
-def get_user_profile(*, user=AUTH_USER_MODEL) -> Profile:
+def get_user_profile_obj(*, user=AUTH_USER_MODEL) -> Profile:
+    """
+    Retrieves the user profile object based on the provided user.
+
+    This function fetches the user profile associated with the given user object.
+
+    :param user: (User): The user object for which to retrieve the profile.
+    :return: Profile: The user profile object.
+    """
+
     user_profile = Profile.objects.get(user=user)
     return user_profile
 
@@ -21,11 +30,11 @@ def get_user_obj(*, username: str) -> BaseUser:
     :return: The retrieved user object.
     """
 
-    user_obj = BaseUser.objects.get(username=username)
+    user_obj = BaseUser.objects.only('username').get(username=username)
     return user_obj
 
 
-def get_profile(*, username: str) -> Profile:
+def get_profile_detail(*, username: str) -> Profile:
 
     """
     Retrieve a user's profile by their username.
